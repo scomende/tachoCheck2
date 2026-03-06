@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { getMockDrivingData } from "@/mock/drivingData";
 import {
   getArvViolationsReport,
   getArvReportFiltersDefault,
 } from "@/mock/arvViolations";
 import type { ArvViolation } from "@/domain/drivingTypes";
+import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
 import {
   ArvFilters,
   ArvViolationTable,
@@ -15,11 +16,31 @@ import {
 } from "@/components/views/arv-verstoesse";
 
 export default function ARVVerstoessePage() {
-  const { drivers } = getMockDrivingData();
+  const { drivers, selectedEmployeeId, setSelectedEmployee } = useSelectedEmployee();
   const [filters, setFilters] = useState(getArvReportFiltersDefault);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reportViolation, setReportViolation] = useState<ArvViolation | null>(
     null
+  );
+
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      driverId: selectedEmployeeId ?? "",
+    }));
+  }, [selectedEmployeeId]);
+
+  const handleFiltersChange = useCallback(
+    (next: typeof filters) => {
+      setFilters(next);
+      if (next.driverId) {
+        const driver = drivers.find((d) => d.id === next.driverId);
+        setSelectedEmployee(next.driverId, driver ?? undefined);
+      } else {
+        setSelectedEmployee(null);
+      }
+    },
+    [drivers, setSelectedEmployee]
   );
 
   const violations = useMemo(
@@ -53,7 +74,7 @@ export default function ARVVerstoessePage() {
       <ArvFilters
         filters={filters}
         drivers={drivers}
-        onFiltersChange={setFilters}
+        onFiltersChange={handleFiltersChange}
       />
       <div className="flex flex-1 min-h-0">
         <ArvViolationTable

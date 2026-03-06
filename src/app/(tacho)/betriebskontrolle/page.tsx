@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useEffect } from "react";
 import { getMockDrivingData } from "@/mock/drivingData";
 import {
   getExportPartsWithStatus,
@@ -8,6 +8,7 @@ import {
   getExportHistory,
 } from "@/mock/controlExports";
 import { DEFAULT_USER_DISPLAY_NAME } from "@/config/layout";
+import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
 import type { ControlExport, ExportConfig } from "@/domain/controlExportTypes";
 import {
   BetriebskontrolleFilters,
@@ -18,24 +19,37 @@ import {
   ExportDetailPanel,
 } from "@/components/views/betriebskontrolle";
 
-function getDefaultConfig(): ExportConfig {
+function getDefaultConfig(initialDriverId?: string | null): ExportConfig {
   const today = new Date().toISOString().slice(0, 10);
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   return {
     dateFrom: weekAgo,
     dateTo: today,
-    driverIds: [],
+    driverIds: initialDriverId ? [initialDriverId] : [],
     format: "xdt",
   };
 }
 
 export default function BetriebskontrollePage() {
-  const { drivers } = getMockDrivingData();
-  const [config, setConfig] = useState<ExportConfig>(getDefaultConfig);
+  const { drivers, selectedEmployeeId } = useSelectedEmployee();
+  const [config, setConfig] = useState<ExportConfig>(() => getDefaultConfig(null));
   const [history, setHistory] = useState<ControlExport[]>(() => getExportHistory());
   const [selectedExportId, setSelectedExportId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedEmployeeId) {
+      setConfig((prev) => ({
+        ...prev,
+        driverIds: prev.driverIds.includes(selectedEmployeeId)
+          ? prev.driverIds
+          : [selectedEmployeeId, ...prev.driverIds],
+      }));
+    } else {
+      setConfig((prev) => ({ ...prev, driverIds: [] }));
+    }
+  }, [selectedEmployeeId]);
 
   const parts = useMemo(() => getExportPartsWithStatus(config), [config]);
 

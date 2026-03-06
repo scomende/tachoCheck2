@@ -8,6 +8,7 @@ import {
 } from "@/mock/vehicles";
 import type { Vehicle } from "@/domain/vehicleTypes";
 import type { VehicleFilters } from "@/mock/vehicles";
+import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
 import {
   FahrzeugeFilters,
   FahrzeugTable,
@@ -23,6 +24,7 @@ const defaultFilters: VehicleFilters = {
 };
 
 export default function FahrzeugePage() {
+  const { selectedEmployeeId } = useSelectedEmployee();
   const [filters, setFilters] = useState<VehicleFilters>(defaultFilters);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);

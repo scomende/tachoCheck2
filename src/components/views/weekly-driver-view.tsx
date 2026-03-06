@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter, usePathname } from "next/navigation";
 import type { DrivingDay, DrivingSegment } from "@/domain/drivingTypes";
 import { getMockDrivingData, getArvViolationsForWeek } from "@/mock/drivingData";
 import { filterDriversBySearch } from "@/lib/driverSearch";
+import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
 import { ArvViolationsPanel } from "@/components/views/arv-violations-panel";
 import {
   formatDayLabel,
@@ -24,12 +25,12 @@ const DRIVER_ID_PARAM = "driverId";
 
 /**
  * US-01: Wochenansicht Fahrerkartendaten.
- * US-03: Mitarbeitenden-Dropdown wird durch Suchfeld in der zweiten Toolbar gefiltert (URL-Parameter search).
- * US-05: Panel „ARV-Verstösse dieser Woche“ rechts; Klick auf Verstoss hebt den Tag in der Wochenansicht hervor.
+ * Globale Mitarbeiter:innen-Auswahl (SelectedEmployeeContext): vorausgewählt im Dropdown.
+ * Bei lokaler Änderung wird die globale Auswahl aktualisiert. URL driverId für Deep-Links.
  */
-
 export const WeeklyDriverView = () => {
   const { drivers, driverWeeks } = getMockDrivingData();
+  const { selectedEmployeeId, setSelectedEmployee } = useSelectedEmployee();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -43,10 +44,10 @@ export const WeeklyDriverView = () => {
   );
 
   const selectedDriverId = useMemo(() => {
-    if (!urlDriverId) return filteredDrivers[0]?.id ?? "";
-    if (filteredDrivers.some((d) => d.id === urlDriverId)) return urlDriverId;
-    return filteredDrivers[0]?.id ?? "";
-  }, [urlDriverId, filteredDrivers]);
+    const fromGlobal = selectedEmployeeId && filteredDrivers.some((d) => d.id === selectedEmployeeId) ? selectedEmployeeId : null;
+    const fromUrl = urlDriverId && filteredDrivers.some((d) => d.id === urlDriverId) ? urlDriverId : null;
+    return fromGlobal ?? fromUrl ?? filteredDrivers[0]?.id ?? "";
+  }, [selectedEmployeeId, urlDriverId, filteredDrivers]);
 
   useEffect(() => {
     if (selectedDriverId && selectedDriverId !== urlDriverId) {
@@ -85,6 +86,8 @@ export const WeeklyDriverView = () => {
     const id = e.target.value;
     if (!id) return;
     setHighlightedDate(null);
+    const driver = filteredDrivers.find((d) => d.id === id);
+    setSelectedEmployee(id, driver ?? undefined);
     const next = new URLSearchParams(searchParams.toString());
     next.set(DRIVER_ID_PARAM, id);
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });

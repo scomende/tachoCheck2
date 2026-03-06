@@ -1,32 +1,60 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
-import { useCallback } from "react";
-import { Search } from "lucide-react";
+import { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import { Search, X } from "lucide-react";
+import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
+import { filterDriversBySearch } from "@/lib/driverSearch";
 import { cn } from "@/lib/utils";
 
-const SEARCH_PARAM = "search";
-
 export const SecondToolbar = () => {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const searchQuery = searchParams.get(SEARCH_PARAM) ?? "";
+  const {
+    selectedDriver,
+    drivers,
+    setSelectedEmployee,
+    clearSelection,
+  } = useSelectedEmployee();
+  const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      const next = new URLSearchParams(searchParams.toString());
-      if (value) {
-        next.set(SEARCH_PARAM, value);
-      } else {
-        next.delete(SEARCH_PARAM);
-      }
-      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
-    },
-    [pathname, searchParams, router]
+  const filteredDrivers = useMemo(
+    () => filterDriversBySearch(drivers, query),
+    [drivers, query]
   );
+
+  const displayValue = selectedDriver ? selectedDriver.name : query;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    if (!value) clearSelection();
+    setIsOpen(true);
+  };
+
+  const handleSelect = useCallback(
+    (driver: (typeof drivers)[number]) => {
+      setSelectedEmployee(driver.id, driver);
+      setQuery("");
+      setIsOpen(false);
+    },
+    [setSelectedEmployee]
+  );
+
+  const handleClear = useCallback(() => {
+    clearSelection();
+    setQuery("");
+    setIsOpen(false);
+  }, [clearSelection]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div
@@ -37,32 +65,84 @@ export const SecondToolbar = () => {
       aria-label="Suche und Filter"
     >
       <div className="flex w-full items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1 max-w-md" ref={containerRef}>
           <Search
-            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none"
             aria-hidden
           />
           <input
-            type="search"
+            type="text"
             placeholder="Mitarbeiter:in suchen…"
-            aria-label="Mitarbeiter:in suchen"
-            value={searchQuery}
-            onChange={handleSearchChange}
+            aria-label="Mitarbeiter:in suchen oder auswählen"
+            aria-expanded={isOpen}
+            aria-autocomplete="list"
+            role="combobox"
+            value={displayValue}
+            onChange={handleInputChange}
+            onFocus={() => setIsOpen(true)}
             className={cn(
-              "w-full border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground",
+              "w-full border border-border bg-background py-2 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground",
               "focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
               "rounded"
             )}
           />
+          {selectedDriver && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Auswahl aufheben"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+          {isOpen && (
+            <ul
+              className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded border border-border bg-background py-1 shadow-lg"
+              role="listbox"
+            >
+              {filteredDrivers.length === 0 ? (
+                <li className="px-3 py-2 text-sm text-muted-foreground">
+                  Keine Treffer
+                </li>
+              ) : (
+                filteredDrivers.map((d) => (
+                  <li
+                    key={d.id}
+                    role="option"
+                    aria-selected={selectedDriver?.id === d.id}
+                    className={cn(
+                      "cursor-pointer px-3 py-2 text-sm hover:bg-muted",
+                      selectedDriver?.id === d.id && "bg-primary/10 font-medium"
+                    )}
+                    onClick={() => handleSelect(d)}
+                  >
+                    {d.name}
+                    {d.personalNumber != null && (
+                      <span className="ml-2 text-muted-foreground">
+                        ({d.personalNumber})
+                      </span>
+                    )}
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
         </div>
         <div
           className={cn(
             "flex items-center gap-2 rounded border border-dashed border-border px-3 py-2 text-sm text-muted-foreground"
           )}
         >
-          Filter – Platzhalter
+          {selectedDriver ? (
+            <span className="text-foreground">
+              Global: {selectedDriver.name}
+            </span>
+          ) : (
+            "Filter – Platzhalter"
+          )}
         </div>
       </div>
     </div>
   );
-};
+}
