@@ -8,3 +8,10 @@ export {
   getMockDrivingData,
   getArvViolationsForWeek,
 } from "./drivingData";
+export {
+  MOCK_ARV_VIOLATIONS_REPORT,
+  getArvViolationsReport,
+  getArvReportFiltersDefault,
+  getDriverNameById,
+} from "./arvViolations";
+export type { ArvReportFilters } from "./arvViolations";

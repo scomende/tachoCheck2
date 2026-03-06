@@ -11,5 +11,7 @@ export type {
   Driver,
   DriverWeek,
   ArvViolationSeverity,
+  ArvViolationStatus,
+  ArvViolationType,
   ArvViolation,
 } from "./drivingTypes";
