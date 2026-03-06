@@ -15,3 +15,13 @@ export type {
   ArvViolationType,
   ArvViolation,
 } from "./drivingTypes";
+export type {
+  ExportFormat,
+  ExportPartStatus,
+  ExportPartType,
+  ExportPart,
+  ControlExportStatus,
+  ControlExport,
+  ExportConfig,
+} from "./controlExportTypes";
+export type { VehicleSource, VehicleQualification, Vehicle } from "./vehicleTypes";
