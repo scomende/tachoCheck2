@@ -42,7 +42,7 @@ export function ExportDetailPanel({ exportEntry, className }: ExportDetailPanelP
     return (
       <aside
         className={cn(
-          "flex w-80 shrink-0 flex-col border-l border-border bg-muted/20 p-4",
+          "flex w-80 shrink-0 flex-col border-l border-border bg-muted/10 p-5",
           className
         )}
         role="complementary"
@@ -58,46 +58,46 @@ export function ExportDetailPanel({ exportEntry, className }: ExportDetailPanelP
   return (
     <aside
       className={cn(
-        "flex w-80 shrink-0 flex-col overflow-auto border-l border-border bg-background",
+        "flex w-80 shrink-0 flex-col overflow-auto border-l border-border bg-muted/10",
         className
       )}
       role="complementary"
       aria-label="Export-Details"
     >
       <Card className="m-4 border-0 shadow-none">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Export-Details</CardTitle>
+        <CardHeader className="pb-1">
+          <CardTitle className="text-base font-semibold">Export-Details</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4 text-sm">
-          <div>
+        <CardContent className="flex flex-col gap-5 p-5 pt-0 text-sm">
+          <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">Datum / Uhrzeit</span>
             <p className="text-foreground">{formatDateTime(exportEntry.createdAt)}</p>
           </div>
-          <div>
+          <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">Zeitraum</span>
             <p className="text-foreground">
               {formatDate(exportEntry.dateFrom)} – {formatDate(exportEntry.dateTo)}
             </p>
           </div>
-          <div>
+          <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">Verantwortliche Person</span>
             <p className="text-foreground">{exportEntry.responsiblePerson}</p>
           </div>
-          <div>
+          <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">Dateiname / Export-ID</span>
             <p className="font-mono text-xs text-foreground">{exportEntry.filename}</p>
           </div>
-          <div>
+          <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">Format</span>
             <p className="text-foreground">.{exportEntry.format}</p>
           </div>
-          <div>
+          <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">Anzahl Mitarbeitende</span>
             <p className="text-foreground">{exportEntry.driverIds.length}</p>
           </div>
-          <div>
+          <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">Bestandteile</span>
-            <ul className="mt-1 flex flex-col gap-1">
+            <ul className="mt-1 flex flex-col gap-2">
               {exportEntry.parts.map((part) => {
                 const Icon = PART_STATUS_ICON[part.status];
                 return (

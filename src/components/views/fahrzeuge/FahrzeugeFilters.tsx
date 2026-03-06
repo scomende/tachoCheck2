@@ -29,13 +29,13 @@ export function FahrzeugeFilters({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-end gap-4 border-b border-border bg-muted/30 px-4 py-3",
+        "flex flex-wrap items-end gap-5 border-b border-border bg-muted/30 px-5 py-3",
         className
       )}
       role="search"
       aria-label="Fahrzeuge filtern"
     >
-      <div className="flex flex-col gap-1 min-w-[200px]">
+      <div className="flex min-w-[200px] flex-col gap-1.5">
         <label htmlFor="fv-search" className="text-xs font-medium text-muted-foreground">
           Suche (Kennzeichen, Fahrzeugnummer, Bezeichnung)
         </label>
@@ -45,10 +45,10 @@ export function FahrzeugeFilters({
           value={filters.search}
           onChange={(e) => update({ search: e.target.value })}
           placeholder="Suchen…"
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-10 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="fv-source" className="text-xs font-medium text-muted-foreground">
           Quelle
         </label>
@@ -56,7 +56,7 @@ export function FahrzeugeFilters({
           id="fv-source"
           value={filters.source}
           onChange={(e) => update({ source: e.target.value as VehicleFilters["source"] })}
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         >
           {SOURCE_OPTIONS.map((o) => (
             <option key={o.value || "all"} value={o.value}>
@@ -65,7 +65,7 @@ export function FahrzeugeFilters({
           ))}
         </select>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="fv-editable" className="text-xs font-medium text-muted-foreground">
           Editierbar
         </label>
@@ -76,14 +76,14 @@ export function FahrzeugeFilters({
             const v = e.target.value;
             update({ editable: v === "" ? "" : v === "yes" });
           }}
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         >
           <option value="">Alle</option>
           <option value="yes">Ja</option>
           <option value="no">Nein</option>
         </select>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="fv-coop" className="text-xs font-medium text-muted-foreground">
           Coop-Fahrzeug
         </label>
@@ -94,19 +94,19 @@ export function FahrzeugeFilters({
             const v = e.target.value;
             update({ isCoopVehicle: v === "" ? "" : v === "yes" });
           }}
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         >
           <option value="">Alle</option>
           <option value="yes">Ja</option>
           <option value="no">Nein</option>
         </select>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <span className="text-xs font-medium text-muted-foreground">&nbsp;</span>
         <button
           type="button"
           onClick={onOpenCreate}
-          className="rounded border border-primary bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="h-9 rounded border border-primary bg-primary px-4 text-sm font-medium text-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0 hover:bg-primary/90"
         >
           Fahrzeug erfassen
         </button>

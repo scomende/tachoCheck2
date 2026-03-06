@@ -11,13 +11,13 @@ type MatchingHintProps = {
 export function MatchingHint({ className }: MatchingHintProps) {
   return (
     <Card className={cn("border-border bg-muted/20", className)}>
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
+      <CardHeader className="pb-1">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold">
           <Info className="size-5 text-primary" aria-hidden />
           Matching / Schnittstelle
         </CardTitle>
       </CardHeader>
-      <CardContent className="text-sm text-muted-foreground space-y-2">
+      <CardContent className="space-y-2 p-5 pt-0 text-sm text-muted-foreground">
         <p>
           Die <strong className="text-foreground">Fahrzeugnummer</strong> ist der
           zentrale Schlüssel für das Matching mit der Ressourcenplanung.

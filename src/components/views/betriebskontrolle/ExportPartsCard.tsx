@@ -31,10 +31,10 @@ type ExportPartsCardProps = {
 export function ExportPartsCard({ parts, className }: ExportPartsCardProps) {
   return (
     <Card className={cn("border-border", className)}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">Exportbestandteile</CardTitle>
+      <CardHeader className="pb-1">
+        <CardTitle className="text-base font-semibold">Exportbestandteile</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-5 pt-0">
         <ul className="flex flex-col gap-2">
           {parts.map((part) => {
             const Icon = STATUS_ICON[part.status];
@@ -42,7 +42,7 @@ export function ExportPartsCard({ parts, className }: ExportPartsCardProps) {
               <li
                 key={part.id}
                 className={cn(
-                  "flex items-center justify-between gap-3 rounded border px-3 py-2 text-sm",
+                  "flex items-center justify-between gap-3 rounded border px-3 py-2.5 text-sm",
                   STATUS_STYLE[part.status]
                 )}
               >

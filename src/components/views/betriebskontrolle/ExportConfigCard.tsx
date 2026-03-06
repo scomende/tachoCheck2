@@ -23,11 +23,11 @@ export function ExportConfigCard({ config, className }: ExportConfigCardProps) {
 
   return (
     <Card className={cn("border-border", className)}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">Export-Konfiguration</CardTitle>
+      <CardHeader className="pb-1">
+        <CardTitle className="text-base font-semibold">Export-Konfiguration</CardTitle>
       </CardHeader>
-      <CardContent className="text-sm">
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+      <CardContent className="p-5 pt-0 text-sm">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
           <dt className="text-muted-foreground">Zeitraum:</dt>
           <dd>{formatDate(config.dateFrom)} – {formatDate(config.dateTo)}</dd>
           <dt className="text-muted-foreground">Mitarbeitende:</dt>

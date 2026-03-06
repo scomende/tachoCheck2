@@ -115,7 +115,7 @@ export const WeeklyDriverView = () => {
   if (drivers.length === 0) {
     return (
       <div
-        className="flex min-h-[20rem] items-center justify-center border border-border bg-background p-8 text-muted-foreground"
+        className="flex min-h-[20rem] items-center justify-center border border-border bg-background p-8 text-sm text-muted-foreground"
         role="region"
         aria-label="Wochenansicht Fahrerkarten"
       >
@@ -129,7 +129,7 @@ export const WeeklyDriverView = () => {
   if (currentWeekStart && !driverWeek) {
     return (
       <div
-        className="flex min-h-[20rem] items-center justify-center border border-border bg-background p-8 text-muted-foreground"
+        className="flex min-h-[20rem] items-center justify-center border border-border bg-background p-8 text-sm text-muted-foreground"
         role="region"
         aria-label="Wochenansicht Fahrerkarten"
       >
@@ -141,7 +141,7 @@ export const WeeklyDriverView = () => {
   if (!driverWeek && availableWeeks.length === 0) {
     return (
       <div
-        className="flex min-h-[20rem] items-center justify-center border border-border bg-background p-8 text-muted-foreground"
+        className="flex min-h-[20rem] items-center justify-center border border-border bg-background p-8 text-sm text-muted-foreground"
         role="region"
         aria-label="Wochenansicht Fahrerkarten"
       >
@@ -153,15 +153,15 @@ export const WeeklyDriverView = () => {
   if (hasNoSearchResults) {
     return (
       <div
-        className="flex w-full flex-col gap-4 border border-border bg-background p-6"
+        className="flex w-full flex-col gap-5 rounded border border-border bg-background p-6"
         role="region"
         aria-label="Wochenansicht Fahrerkarten"
       >
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex flex-col gap-1">
+        <div className="flex flex-wrap items-end gap-6">
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="weekly-driver-select"
-              className="text-sm font-medium text-foreground"
+              className="text-xs font-medium text-muted-foreground"
             >
               Mitarbeitende
             </label>
@@ -170,15 +170,13 @@ export const WeeklyDriverView = () => {
               value=""
               disabled
               aria-label="Mitarbeitende auswählen"
-              className={cn(
-                "min-w-[12rem] border border-border bg-background px-3 py-2 text-sm text-muted-foreground rounded"
-              )}
+              className="h-9 min-w-[12rem] rounded border border-border bg-background px-3 text-sm text-muted-foreground"
             >
               <option value="">Keine Treffer</option>
             </select>
           </div>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Keine Treffer. Bitte Suche anpassen.
         </p>
       </div>
@@ -189,17 +187,17 @@ export const WeeklyDriverView = () => {
 
   return (
     <div
-      className="flex w-full flex-1 gap-0 overflow-hidden border border-border bg-background"
+      className="flex w-full flex-1 gap-0 overflow-hidden rounded border border-border bg-background"
       role="region"
       aria-label="Wochenansicht Fahrerkarten"
     >
-      <div className="flex min-w-0 flex-1 flex-col gap-4 p-6 overflow-auto">
+      <div className="flex min-w-0 flex-1 flex-col gap-6 p-6 overflow-auto">
       {/* Auswahl Mitarbeitende + Woche */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-wrap items-end gap-6">
+        <div className="flex flex-col gap-1.5">
           <label
             htmlFor="weekly-driver-select"
-            className="text-sm font-medium text-foreground"
+            className="text-xs font-medium text-muted-foreground"
           >
             Mitarbeitende
           </label>
@@ -209,9 +207,8 @@ export const WeeklyDriverView = () => {
             onChange={handleDriverChange}
             aria-label="Mitarbeitende auswählen"
             className={cn(
-              "min-w-[12rem] border border-border bg-background px-3 py-2 text-sm text-foreground",
-              "focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
-              "rounded"
+              "h-9 min-w-[12rem] rounded border border-border bg-background px-3 text-sm text-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0"
             )}
           >
             {filteredDrivers.map((d) => (
@@ -221,10 +218,10 @@ export const WeeklyDriverView = () => {
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <label
             htmlFor="weekly-week-select"
-            className="text-sm font-medium text-foreground"
+            className="text-xs font-medium text-muted-foreground"
           >
             Woche
           </label>
@@ -234,9 +231,8 @@ export const WeeklyDriverView = () => {
             onChange={handleWeekChange}
             aria-label="Woche auswählen"
             className={cn(
-              "min-w-[16rem] border border-border bg-background px-3 py-2 text-sm text-foreground",
-              "focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
-              "rounded"
+              "h-9 min-w-[16rem] rounded border border-border bg-background px-3 text-sm text-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0"
             )}
           >
             {weekOptions.map((o) => (
@@ -252,7 +248,7 @@ export const WeeklyDriverView = () => {
       <div className="overflow-x-auto">
         <div className="min-w-[600px]">
           {/* Achsenbeschriftung: Stunden */}
-          <div className="mb-1 flex border-b border-border">
+          <div className="mb-2 flex border-b border-border pb-1">
             <div className="w-20 shrink-0 text-xs text-muted-foreground" aria-hidden />
             <div className="relative flex flex-1">
               {[0, 4, 8, 12, 16, 20, 24].map((h) => (
@@ -321,8 +317,8 @@ const DayRow = ({ day, isHighlighted = false }: DayRowProps) => {
   return (
     <div
       className={cn(
-        "flex items-stretch border-b border-border py-1 transition-colors",
-        isHighlighted && "bg-primary/10 ring-2 ring-inset ring-primary"
+        "flex items-stretch border-b border-border py-2 transition-colors last:border-b-0",
+        isHighlighted && "bg-primary/5 border-l-4 border-l-primary"
       )}
     >
       <div
@@ -331,15 +327,15 @@ const DayRow = ({ day, isHighlighted = false }: DayRowProps) => {
       >
         {dayLabel}
       </div>
-      <div className="relative flex flex-1 items-center py-1">
+      <div className="relative flex flex-1 items-center py-1.5">
         {/* Hintergrund 00:00–24:00 */}
         <div
-          className="absolute inset-0 rounded border border-border/50 bg-muted/30"
+          className="absolute inset-0 rounded-sm bg-muted/20"
           aria-hidden
         />
         {isEmpty ? (
           <div
-            className="absolute inset-0 flex items-center justify-center rounded text-xs text-muted-foreground"
+            className="absolute inset-0 flex items-center justify-center rounded-sm text-xs text-muted-foreground"
             style={{ left: "0%", right: "0%", width: "100%" }}
           >
             Ruhezeit
@@ -358,7 +354,7 @@ const DayRow = ({ day, isHighlighted = false }: DayRowProps) => {
               <div
                 key={`${day.date}-${i}`}
                 className={cn(
-                  "absolute top-1 bottom-1 min-w-[4px] rounded cursor-default",
+                  "absolute top-1 bottom-1 min-w-[4px] rounded-sm cursor-default opacity-95",
                   colorClass
                 )}
                 style={{

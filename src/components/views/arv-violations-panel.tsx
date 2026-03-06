@@ -33,7 +33,7 @@ export const ArvViolationsPanel = ({
   return (
     <aside
       className={cn(
-        "flex w-80 shrink-0 flex-col border-l border-border bg-background",
+        "flex w-80 shrink-0 flex-col border-l border-border bg-muted/10",
         className
       )}
       role="complementary"
@@ -42,13 +42,13 @@ export const ArvViolationsPanel = ({
       <h2 className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">
         ARV-Verstösse dieser Woche
       </h2>
-      <div className="flex flex-1 flex-col gap-0 overflow-y-auto p-2">
+      <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
         {violations.length === 0 ? (
-          <p className="px-2 py-4 text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Keine Verstösse in dieser Woche
           </p>
         ) : (
-          <ul className="flex flex-col gap-1">
+          <ul className="flex flex-col gap-2">
             {violations.map((v, i) => {
               const isHighlighted = v.date === highlightedDate;
               const SeverityIcon = v.severity ? SEVERITY_ICON[v.severity] : null;
@@ -58,7 +58,7 @@ export const ArvViolationsPanel = ({
                     type="button"
                     onClick={() => onSelectDate(v.date)}
                     className={cn(
-                      "flex w-full flex-col gap-0.5 rounded border px-3 py-2 text-left text-sm transition-colors",
+                      "flex w-full flex-col gap-0.5 rounded border px-3 py-2.5 text-left text-sm transition-colors",
                       "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0",
                       isHighlighted
                         ? "border-primary bg-primary/10"

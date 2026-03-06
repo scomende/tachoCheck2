@@ -11,13 +11,13 @@ type DataSourceInfoProps = {
 export function DataSourceInfo({ className }: DataSourceInfoProps) {
   return (
     <Card className={cn("border-border bg-muted/20", className)}>
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
+      <CardHeader className="pb-1">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold">
           <Info className="size-5 text-primary" aria-hidden />
           Datenherkunft
         </CardTitle>
       </CardHeader>
-      <CardContent className="text-sm text-muted-foreground space-y-3">
+      <CardContent className="space-y-3 p-5 pt-0 text-sm text-muted-foreground">
         <p>
           <strong className="text-foreground">Daten aus Tacho Check:</strong>{" "}
           Fahrerkartendaten, ARV-Reports, Aufstellungen zur Arbeitszeit sowie

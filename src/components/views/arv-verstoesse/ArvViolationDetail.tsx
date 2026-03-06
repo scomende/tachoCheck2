@@ -38,7 +38,7 @@ export function ArvViolationDetail({
     return (
       <aside
         className={cn(
-          "flex w-96 shrink-0 flex-col border-l border-border bg-muted/20 p-4",
+          "flex w-96 shrink-0 flex-col border-l border-border bg-muted/10 p-5",
           className
         )}
         role="complementary"
@@ -62,18 +62,18 @@ export function ArvViolationDetail({
   return (
     <aside
       className={cn(
-        "flex w-96 shrink-0 flex-col overflow-auto border-l border-border bg-background",
+        "flex w-96 shrink-0 flex-col overflow-auto border-l border-border bg-muted/10",
         className
       )}
       role="complementary"
       aria-label="Detail ARV-Verstoss"
     >
       <Card className="m-4 border-0 shadow-none">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Verstoss-Details</CardTitle>
+        <CardHeader className="pb-1">
+          <CardTitle className="text-base font-semibold">Verstoss-Details</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div>
+        <CardContent className="flex flex-col gap-5 p-5 pt-0">
+          <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">
               Mitarbeiter:in
             </span>
@@ -83,7 +83,7 @@ export function ArvViolationDetail({
                 : "–"}
             </p>
           </div>
-          <div>
+          <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">
               Datum / Zeitraum
             </span>
@@ -95,21 +95,21 @@ export function ArvViolationDetail({
             </p>
           </div>
           {violation.rule && (
-            <div>
+            <div className="flex flex-col gap-0.5">
               <span className="text-xs font-medium text-muted-foreground">
                 Betroffene Regel
               </span>
               <p className="text-sm text-foreground">{violation.rule}</p>
             </div>
           )}
-          <div>
+          <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">
               Kurzbeschreibung
             </span>
             <p className="text-sm text-foreground">{violation.description}</p>
           </div>
           {violation.severity && SeverityIcon && (
-            <div>
+            <div className="flex flex-col gap-0.5">
               <span className="text-xs font-medium text-muted-foreground">
                 Schweregrad
               </span>
@@ -119,7 +119,7 @@ export function ArvViolationDetail({
               </p>
             </div>
           )}
-          <div>
+          <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-muted-foreground">
               Datenbasis
             </span>
@@ -130,12 +130,14 @@ export function ArvViolationDetail({
             </p>
           </div>
           {violation.status && (
-            <div>
+            <div className="flex flex-col gap-0.5">
               <span className="text-xs font-medium text-muted-foreground">
                 Status
               </span>
-              <p className="text-sm text-foreground">
-                {STATUS_LABELS[violation.status]}
+              <p className="text-sm">
+                <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                  {STATUS_LABELS[violation.status]}
+                </span>
               </p>
             </div>
           )}

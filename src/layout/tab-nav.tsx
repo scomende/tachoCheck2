@@ -11,7 +11,7 @@ export const TabNav = () => {
   return (
     <nav
       className={cn(
-        "flex w-full border-b border-border border-l border-border bg-background"
+        "flex w-full border-b border-border bg-background px-5"
       )}
       role="navigation"
       aria-label="Hauptnavigation"
@@ -27,15 +27,15 @@ export const TabNav = () => {
                   "relative block px-4 pt-3 pb-3 text-sm no-underline",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
                   isActive
-                    ? "font-bold text-primary"
-                    : "font-normal text-foreground hover:text-primary"
+                    ? "font-semibold text-primary"
+                    : "font-normal text-muted-foreground hover:text-foreground"
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
                 {tab.label}
                 {isActive && (
                   <span
-                    className="absolute bottom-0 left-0 right-0 h-1.5 bg-primary"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
                     aria-hidden
                   />
                 )}

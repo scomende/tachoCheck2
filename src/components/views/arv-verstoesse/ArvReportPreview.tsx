@@ -79,8 +79,8 @@ export function ArvReportPreview({
             <X className="size-5" />
           </Button>
         </div>
-        <div className="flex-1 overflow-auto p-4">
-          <div className="mb-4 grid grid-cols-2 gap-2 text-sm">
+        <div className="flex-1 overflow-auto p-5">
+          <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <span className="text-muted-foreground">Mitarbeiter:in</span>
             <span className="font-medium">
               {violation.driverId ? getDriverNameById(violation.driverId) : "–"}

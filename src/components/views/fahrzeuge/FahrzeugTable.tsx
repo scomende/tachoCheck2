@@ -31,18 +31,18 @@ export function FahrzeugTable({
       <table className="w-full border-collapse text-left text-sm">
         <thead className="sticky top-0 z-10 border-b border-border bg-muted/50">
           <tr>
-            <th className="px-4 py-2 font-semibold text-foreground">Kennzeichen</th>
-            <th className="px-4 py-2 font-semibold text-foreground">Fahrzeugnummer</th>
-            <th className="px-4 py-2 font-semibold text-foreground">Bezeichnung / Typ</th>
-            <th className="px-4 py-2 font-semibold text-foreground">Quelle</th>
-            <th className="px-4 py-2 font-semibold text-foreground">Coop-Fahrzeug</th>
-            <th className="px-4 py-2 font-semibold text-foreground">Editierbar</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Kennzeichen</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fahrzeugnummer</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bezeichnung / Typ</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quelle</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Coop-Fahrzeug</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Editierbar</th>
           </tr>
         </thead>
         <tbody>
           {vehicles.length === 0 ? (
             <tr>
-              <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+              <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted-foreground">
                 Keine Fahrzeuge gefunden
               </td>
             </tr>
@@ -53,10 +53,10 @@ export function FahrzeugTable({
                 <tr
                   key={v.id}
                   className={cn(
-                    "border-b border-border transition-colors",
-                    "hover:bg-muted/30 cursor-pointer",
-                    !v.editable && "bg-muted/20",
-                    isSelected && "bg-primary/10"
+                    "border-b border-border transition-colors min-h-[2.75rem]",
+                    "hover:bg-muted/20 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
+                    !v.editable && "bg-muted/10",
+                    isSelected && "bg-primary/5 border-l-4 border-l-primary"
                   )}
                   onClick={() => onSelect(v)}
                   onKeyDown={(e) => {
@@ -70,19 +70,21 @@ export function FahrzeugTable({
                   aria-pressed={isSelected}
                   aria-label={`${v.licensePlate} ${v.vehicleNumber} ${v.displayName}`}
                 >
-                  <td className="px-4 py-2 font-medium text-foreground">
+                  <td className="px-4 py-3 font-medium text-foreground">
                     {v.licensePlate}
                   </td>
-                  <td className="px-4 py-2 font-mono text-foreground">
+                  <td className="px-4 py-3 font-mono text-foreground">
                     {v.vehicleNumber}
                   </td>
-                  <td className="px-4 py-2 text-foreground">
+                  <td className="px-4 py-3 text-foreground">
                     {v.displayName}
                   </td>
-                  <td className="px-4 py-2 text-muted-foreground">
-                    {SOURCE_LABEL[v.source]}
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                      {SOURCE_LABEL[v.source]}
+                    </span>
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3">
                     {v.isCoopVehicle ? (
                       <span className="flex items-center gap-1.5 text-foreground">
                         <Check className="size-4 text-primary" aria-hidden />
@@ -95,7 +97,7 @@ export function FahrzeugTable({
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3">
                     {v.editable ? (
                       <span className="flex items-center gap-1.5 text-foreground">
                         <Pencil className="size-4" aria-hidden />

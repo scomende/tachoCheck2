@@ -24,13 +24,13 @@ export function ArvFilters({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-end gap-4 border-b border-border bg-muted/30 px-4 py-3",
+        "flex flex-wrap items-end gap-5 border-b border-border bg-muted/30 px-5 py-3",
         className
       )}
       role="search"
       aria-label="Filter ARV-Verstösse"
     >
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="arv-date-from" className="text-xs font-medium text-muted-foreground">
           Von
         </label>
@@ -39,10 +39,10 @@ export function ArvFilters({
           type="date"
           value={filters.dateFrom}
           onChange={(e) => update({ dateFrom: e.target.value })}
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="arv-date-to" className="text-xs font-medium text-muted-foreground">
           Bis
         </label>
@@ -51,10 +51,10 @@ export function ArvFilters({
           type="date"
           value={filters.dateTo}
           onChange={(e) => update({ dateTo: e.target.value })}
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="arv-driver" className="text-xs font-medium text-muted-foreground">
           Mitarbeiter:in
         </label>
@@ -62,7 +62,7 @@ export function ArvFilters({
           id="arv-driver"
           value={filters.driverId}
           onChange={(e) => update({ driverId: e.target.value })}
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         >
           <option value="">Alle</option>
           {drivers.map((d) => (
@@ -72,7 +72,7 @@ export function ArvFilters({
           ))}
         </select>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="arv-severity" className="text-xs font-medium text-muted-foreground">
           Schweregrad
         </label>
@@ -82,7 +82,7 @@ export function ArvFilters({
           onChange={(e) =>
             update({ severity: e.target.value as ArvReportFilters["severity"] })
           }
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         >
           <option value="">Alle</option>
           {SEVERITY_OPTIONS.map((o) => (
@@ -92,7 +92,7 @@ export function ArvFilters({
           ))}
         </select>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="arv-status" className="text-xs font-medium text-muted-foreground">
           Status
         </label>
@@ -102,7 +102,7 @@ export function ArvFilters({
           onChange={(e) =>
             update({ status: e.target.value as ArvReportFilters["status"] })
           }
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         >
           <option value="">Alle</option>
           {STATUS_OPTIONS.map((o) => (
@@ -112,19 +112,19 @@ export function ArvFilters({
           ))}
         </select>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <span className="text-xs font-medium text-muted-foreground">
           Datenbasis
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 rounded border border-border bg-background p-0.5">
           <button
             type="button"
             onClick={() => update({ useCorrectedData: false })}
             className={cn(
-              "rounded border px-3 py-1.5 text-sm",
+              "h-8 rounded px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0",
               !filters.useCorrectedData
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:bg-muted/50"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted/50"
             )}
           >
             Originaldaten
@@ -133,10 +133,10 @@ export function ArvFilters({
             type="button"
             onClick={() => update({ useCorrectedData: true })}
             className={cn(
-              "rounded border px-3 py-1.5 text-sm",
+              "h-8 rounded px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0",
               filters.useCorrectedData
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:bg-muted/50"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted/50"
             )}
           >
             Korrigierte Daten

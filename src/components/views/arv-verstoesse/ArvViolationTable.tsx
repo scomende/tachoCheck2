@@ -38,17 +38,17 @@ export function ArvViolationTable({
       <table className="w-full border-collapse text-left text-sm">
         <thead className="sticky top-0 z-10 border-b border-border bg-muted/50">
           <tr>
-            <th className="px-4 py-2 font-semibold text-foreground">Mitarbeiter:in</th>
-            <th className="px-4 py-2 font-semibold text-foreground">Datum</th>
-            <th className="px-4 py-2 font-semibold text-foreground">Verstosstyp</th>
-            <th className="px-4 py-2 font-semibold text-foreground">Schweregrad</th>
-            <th className="px-4 py-2 font-semibold text-foreground">Status</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mitarbeiter:in</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Datum</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Verstosstyp</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Schweregrad</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
           </tr>
         </thead>
         <tbody>
           {violations.length === 0 ? (
             <tr>
-              <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+              <td colSpan={5} className="px-4 py-12 text-center text-sm text-muted-foreground">
                 Keine Verstösse für die gewählten Filter
               </td>
             </tr>
@@ -60,9 +60,9 @@ export function ArvViolationTable({
                 <tr
                   key={v.id ?? `${v.driverId}-${v.date}-${v.description}`}
                   className={cn(
-                    "border-b border-border transition-colors",
-                    "hover:bg-muted/30 cursor-pointer",
-                    isSelected && "bg-primary/10"
+                    "border-b border-border transition-colors min-h-[2.75rem]",
+                    "hover:bg-muted/20 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
+                    isSelected && "bg-primary/5 border-l-4 border-l-primary"
                   )}
                   onClick={() => onSelect(v)}
                   onKeyDown={(e) => {
@@ -76,29 +76,35 @@ export function ArvViolationTable({
                   aria-pressed={isSelected}
                   aria-label={`${getDriverNameById(v.driverId ?? "")}, ${formatDayLabelLong(v.date)}, ${v.description}`}
                 >
-                  <td className="px-4 py-2 font-medium text-foreground">
+                  <td className="px-4 py-3 font-medium text-foreground">
                     {v.driverId ? getDriverNameById(v.driverId) : "–"}
                   </td>
-                  <td className="px-4 py-2 text-muted-foreground">
+                  <td className="px-4 py-3 text-muted-foreground">
                     {formatDayLabelLong(v.date)}
                   </td>
-                  <td className="px-4 py-2 text-foreground">
+                  <td className="px-4 py-3 text-foreground">
                     {v.violationType
                       ? VIOLATION_TYPE_LABELS[v.violationType]
                       : "–"}
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3">
                     {v.severity && SeverityIcon ? (
-                      <span className="flex items-center gap-1.5">
-                        <SeverityIcon className="size-4 text-muted-foreground" aria-hidden />
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                        <SeverityIcon className="size-3.5 text-muted-foreground" aria-hidden />
                         {SEVERITY_LABELS[v.severity]}
                       </span>
                     ) : (
                       "–"
                     )}
                   </td>
-                  <td className="px-4 py-2 text-muted-foreground">
-                    {v.status ? STATUS_LABELS[v.status] : "–"}
+                  <td className="px-4 py-3">
+                    {v.status ? (
+                      <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                        {STATUS_LABELS[v.status]}
+                      </span>
+                    ) : (
+                      "–"
+                    )}
                   </td>
                 </tr>
               );

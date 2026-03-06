@@ -13,23 +13,23 @@ export const AppBar = () => {
   return (
     <header
       className={cn(
-        "flex w-full items-center justify-between border-b border-border bg-background px-4 py-3",
+        "flex w-full items-center justify-between border-b border-border bg-muted/30 px-5 py-3",
         "min-h-[3.25rem]"
       )}
       role="banner"
       aria-label="App-Leiste"
     >
-      <div className="flex items-center gap-4">
-        <span className="text-base font-bold text-primary">
+      <div className="flex items-center gap-5">
+        <span className="text-lg font-bold text-primary">
           {APP_TITLE}
         </span>
         <div className="relative flex items-center">
           <select
             aria-label="Kostenstelle auswählen"
             className={cn(
-              "appearance-none border border-border bg-background py-1.5 pl-3 pr-8 text-sm text-foreground",
-              "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
-              "cursor-pointer rounded"
+              "h-9 appearance-none rounded border border-border bg-background pl-3 pr-8 text-sm text-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0",
+              "cursor-pointer"
             )}
             defaultValue={KOSTENSTELLE_OPTIONS[0]}
           >
@@ -50,9 +50,9 @@ export const AppBar = () => {
           <select
             aria-label="Rayon auswählen"
             className={cn(
-              "appearance-none border border-border bg-background py-1.5 pl-3 pr-8 text-sm text-foreground",
-              "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
-              "cursor-pointer rounded"
+              "h-9 appearance-none rounded border border-border bg-background pl-3 pr-8 text-sm text-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0",
+              "cursor-pointer"
             )}
             defaultValue={RAYON_OPTIONS[0]}
           >
@@ -70,15 +70,15 @@ export const AppBar = () => {
           </span>
         </div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-5">
         <span className="text-sm text-foreground">{DEFAULT_USER_DISPLAY_NAME}</span>
         <div className="relative flex items-center">
           <select
             aria-label="Sprache auswählen"
             className={cn(
-              "appearance-none border border-border bg-background py-1.5 pl-3 pr-8 text-sm text-foreground",
-              "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
-              "cursor-pointer rounded"
+              "h-9 appearance-none rounded border border-border bg-background pl-3 pr-8 text-sm text-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0",
+              "cursor-pointer"
             )}
             defaultValue="DE"
           >

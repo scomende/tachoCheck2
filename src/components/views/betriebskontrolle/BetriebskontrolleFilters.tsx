@@ -38,13 +38,13 @@ export function BetriebskontrolleFilters({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-end gap-4 border-b border-border bg-muted/30 px-4 py-3",
+        "flex flex-wrap items-end gap-5 border-b border-border bg-muted/30 px-5 py-3",
         className
       )}
       role="form"
       aria-label="Export-Konfiguration"
     >
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="bk-date-from" className="text-xs font-medium text-muted-foreground">
           Zeitraum von
         </label>
@@ -53,10 +53,10 @@ export function BetriebskontrolleFilters({
           type="date"
           value={config.dateFrom}
           onChange={(e) => update({ dateFrom: e.target.value })}
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="bk-date-to" className="text-xs font-medium text-muted-foreground">
           Zeitraum bis
         </label>
@@ -65,10 +65,10 @@ export function BetriebskontrolleFilters({
           type="date"
           value={config.dateTo}
           onChange={(e) => update({ dateTo: e.target.value })}
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label className="text-xs font-medium text-muted-foreground">
           Mitarbeiter:in (Mehrfachauswahl)
         </label>
@@ -76,14 +76,14 @@ export function BetriebskontrolleFilters({
           <button
             type="button"
             onClick={selectAllDrivers}
-            className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-muted/50"
+            className="h-8 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0 hover:bg-muted/50"
           >
             Alle
           </button>
           <button
             type="button"
             onClick={clearDrivers}
-            className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-muted/50"
+            className="h-8 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0 hover:bg-muted/50"
           >
             Keine
           </button>
@@ -91,10 +91,10 @@ export function BetriebskontrolleFilters({
             <label
               key={d.id}
               className={cn(
-                "flex cursor-pointer items-center gap-1.5 rounded border px-2 py-1 text-xs",
+                "flex cursor-pointer items-center gap-1.5 rounded border px-2.5 py-1.5 text-xs focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-0",
                 config.driverIds.includes(d.id)
                   ? "border-primary bg-primary/10 text-foreground"
-                  : "border-border bg-background text-muted-foreground"
+                  : "border-border bg-background text-muted-foreground hover:bg-muted/30"
               )}
             >
               <input
@@ -108,7 +108,7 @@ export function BetriebskontrolleFilters({
           ))}
         </div>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="bk-region" className="text-xs font-medium text-muted-foreground">
           Region / Kostenstelle (optional)
         </label>
@@ -116,7 +116,7 @@ export function BetriebskontrolleFilters({
           id="bk-region"
           value={config.region ?? ""}
           onChange={(e) => update({ region: e.target.value || undefined })}
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         >
           <option value="">–</option>
           {KOSTENSTELLE_OPTIONS.map((opt) => (
@@ -126,7 +126,7 @@ export function BetriebskontrolleFilters({
           ))}
         </select>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="bk-format" className="text-xs font-medium text-muted-foreground">
           Dateiformat
         </label>
@@ -134,19 +134,19 @@ export function BetriebskontrolleFilters({
           id="bk-format"
           value={config.format}
           onChange={(e) => update({ format: e.target.value as ExportFormat })}
-          className="rounded border border-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         >
           <option value="xdt">.xdt</option>
           <option value="ddd">.ddd</option>
         </select>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <span className="text-xs font-medium text-muted-foreground">&nbsp;</span>
         <button
           type="button"
           onClick={onGenerate}
           disabled={isGenerating || config.driverIds.length === 0}
-          className="rounded border border-primary bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none"
+          className="h-9 rounded border border-primary bg-primary px-4 text-sm font-medium text-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0 hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
         >
           {isGenerating ? "Wird erstellt…" : "Exportpaket generieren"}
         </button>

@@ -59,7 +59,7 @@ export const SecondToolbar = () => {
   return (
     <div
       className={cn(
-        "flex w-full flex-col gap-3 border-b border-border bg-background px-4 py-3"
+        "flex w-full flex-col gap-2 border-b border-border bg-muted/20 px-5 py-2.5"
       )}
       role="toolbar"
       aria-label="Suche und Filter"
@@ -81,16 +81,15 @@ export const SecondToolbar = () => {
             onChange={handleInputChange}
             onFocus={() => setIsOpen(true)}
             className={cn(
-              "w-full border border-border bg-background py-2 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground",
-              "focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
-              "rounded"
+              "h-10 w-full rounded border border-border bg-background pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0"
             )}
           />
           {selectedDriver && (
             <button
               type="button"
               onClick={handleClear}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0"
               aria-label="Auswahl aufheben"
             >
               <X className="size-4" />
@@ -102,7 +101,7 @@ export const SecondToolbar = () => {
               role="listbox"
             >
               {filteredDrivers.length === 0 ? (
-                <li className="px-3 py-2 text-sm text-muted-foreground">
+                <li className="px-3 py-2.5 text-sm text-muted-foreground">
                   Keine Treffer
                 </li>
               ) : (
@@ -112,7 +111,7 @@ export const SecondToolbar = () => {
                     role="option"
                     aria-selected={selectedDriver?.id === d.id}
                     className={cn(
-                      "cursor-pointer px-3 py-2 text-sm hover:bg-muted",
+                      "cursor-pointer px-3 py-2.5 text-sm hover:bg-muted focus-within:bg-muted",
                       selectedDriver?.id === d.id && "bg-primary/10 font-medium"
                     )}
                     onClick={() => handleSelect(d)}
@@ -131,13 +130,14 @@ export const SecondToolbar = () => {
         </div>
         <div
           className={cn(
-            "flex items-center gap-2 rounded border border-dashed border-border px-3 py-2 text-sm text-muted-foreground"
+            "flex min-h-10 items-center rounded border border-dashed border-border px-3 py-2",
+            selectedDriver
+              ? "border-border bg-background text-sm text-foreground"
+              : "text-xs text-muted-foreground"
           )}
         >
           {selectedDriver ? (
-            <span className="text-foreground">
-              Global: {selectedDriver.name}
-            </span>
+            <span>Global: {selectedDriver.name}</span>
           ) : (
             "Filter – Platzhalter"
           )}
