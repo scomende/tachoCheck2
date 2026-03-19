@@ -6,27 +6,31 @@ import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
 import { filterDriversBySearch } from "@/lib/driverSearch";
 import { cn } from "@/lib/utils";
 
+/** Vorübergehend deaktiviert: globale Mitarbeitenden-Suche. Auf true setzen zum Reaktivieren. */
+const GLOBAL_EMPLOYEE_SEARCH_ENABLED = false;
+
 export const SecondToolbar = () => {
   const {
     selectedDriver,
     drivers,
+    searchQuery,
     setSelectedEmployee,
+    setSearchQuery,
     clearSelection,
   } = useSelectedEmployee();
-  const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const filteredDrivers = useMemo(
-    () => filterDriversBySearch(drivers, query),
-    [drivers, query]
+    () => filterDriversBySearch(drivers, searchQuery),
+    [drivers, searchQuery]
   );
 
-  const displayValue = selectedDriver ? selectedDriver.name : query;
+  const displayValue = selectedDriver ? selectedDriver.name : searchQuery;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setQuery(value);
+    setSearchQuery(value);
     if (!value) clearSelection();
     setIsOpen(true);
   };
@@ -34,17 +38,17 @@ export const SecondToolbar = () => {
   const handleSelect = useCallback(
     (driver: (typeof drivers)[number]) => {
       setSelectedEmployee(driver.id, driver);
-      setQuery("");
+      setSearchQuery("");
       setIsOpen(false);
     },
-    [setSelectedEmployee]
+    [setSelectedEmployee, setSearchQuery]
   );
 
   const handleClear = useCallback(() => {
     clearSelection();
-    setQuery("");
+    setSearchQuery("");
     setIsOpen(false);
-  }, [clearSelection]);
+  }, [clearSelection, setSearchQuery]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -65,6 +69,8 @@ export const SecondToolbar = () => {
       aria-label="Suche und Filter"
     >
       <div className="flex w-full items-center justify-between gap-4">
+        {GLOBAL_EMPLOYEE_SEARCH_ENABLED ? (
+        <>
         <div className="relative flex-1 max-w-md" ref={containerRef}>
           <Search
             className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none"
@@ -142,6 +148,12 @@ export const SecondToolbar = () => {
             "Filter – Platzhalter"
           )}
         </div>
+        </>
+        ) : (
+          <div className="flex min-h-10 items-center rounded border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+            Mitarbeiter:in suchen (vorübergehend deaktiviert)
+          </div>
+        )}
       </div>
     </div>
   );

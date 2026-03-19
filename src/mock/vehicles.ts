@@ -45,6 +45,27 @@ export const MOCK_VEHICLES: Vehicle[] = [
     isCoopVehicle: false,
     qualifications: [],
   },
+  /** Fahrzeuge für Fahrerkarten-Mock (Segmente vehicleId V-101, V-102). */
+  {
+    id: "V-101",
+    licensePlate: "ZH 400 101",
+    vehicleNumber: "101",
+    displayName: "LKW RailCare 12",
+    source: "imported",
+    editable: false,
+    isCoopVehicle: true,
+    qualifications: [],
+  },
+  {
+    id: "V-102",
+    licensePlate: "ZH 400 102",
+    vehicleNumber: "102",
+    displayName: "Transporter Kurz",
+    source: "imported",
+    editable: false,
+    isCoopVehicle: true,
+    qualifications: [],
+  },
 ];
 
 /** Laufende Liste (wird bei createVehicle erweitert). */

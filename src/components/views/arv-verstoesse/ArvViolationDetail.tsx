@@ -42,7 +42,7 @@ export function ArvViolationDetail({
           className
         )}
         role="complementary"
-        aria-label="Detail ARV-Verstoss"
+        aria-label="Detail Verstoss"
       >
         <p className="text-sm text-muted-foreground">
           Wählen Sie einen Verstoss aus der Liste.
@@ -56,7 +56,7 @@ export function ArvViolationDetail({
     : null;
 
   const fahrerkartenHref = violation.driverId
-    ? `/fahrerkarten?driverId=${encodeURIComponent(violation.driverId)}`
+    ? `/fahrerkarten?driverId=${encodeURIComponent(violation.driverId)}&date=${encodeURIComponent(violation.date)}`
     : "/fahrerkarten";
 
   return (
@@ -66,7 +66,7 @@ export function ArvViolationDetail({
         className
       )}
       role="complementary"
-      aria-label="Detail ARV-Verstoss"
+      aria-label="Detail Verstoss"
     >
       <Card className="m-4 border-0 shadow-none">
         <CardHeader className="pb-1">

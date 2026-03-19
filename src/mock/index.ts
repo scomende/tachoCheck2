@@ -11,10 +11,11 @@ export {
 export {
   MOCK_ARV_VIOLATIONS_REPORT,
   getArvViolationsReport,
+  getArvViolationsReportMerged,
   getArvReportFiltersDefault,
   getDriverNameById,
 } from "./arvViolations";
-export type { ArvReportFilters } from "./arvViolations";
+export type { ArvReportFilters, MergedArvRow } from "./arvViolations";
 export {
   getExportPartsWithStatus,
   createExport,

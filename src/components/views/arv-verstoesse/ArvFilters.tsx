@@ -28,7 +28,7 @@ export function ArvFilters({
         className
       )}
       role="search"
-      aria-label="Filter ARV-Verstösse"
+      aria-label="Filter Verstösse"
     >
       <div className="flex flex-col gap-1.5">
         <label htmlFor="arv-date-from" className="text-xs font-medium text-muted-foreground">
@@ -111,37 +111,6 @@ export function ArvFilters({
             </option>
           ))}
         </select>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-muted-foreground">
-          Datenbasis
-        </span>
-        <div className="flex items-center gap-1 rounded border border-border bg-background p-0.5">
-          <button
-            type="button"
-            onClick={() => update({ useCorrectedData: false })}
-            className={cn(
-              "h-8 rounded px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0",
-              !filters.useCorrectedData
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted/50"
-            )}
-          >
-            Originaldaten
-          </button>
-          <button
-            type="button"
-            onClick={() => update({ useCorrectedData: true })}
-            className={cn(
-              "h-8 rounded px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0",
-              filters.useCorrectedData
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted/50"
-            )}
-          >
-            Korrigierte Daten
-          </button>
-        </div>
       </div>
     </div>
   );

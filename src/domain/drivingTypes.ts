@@ -20,6 +20,9 @@ export type SegmentType =
   | "availability"
   | "other";
 
+/** Herkunft der Segmentdaten (Tachograph vs. manuelle Erfassung). */
+export type SegmentDataSource = "digital" | "manual";
+
 export type DrivingSegment = {
   /** Startzeit (z.B. "08:00" oder ISO-String). */
   start: TimeString;
@@ -31,8 +34,12 @@ export type DrivingSegment = {
   /** Dauer in Minuten. Optional wenn end gesetzt ist. */
   duration?: DurationMinutes;
   type: SegmentType;
-  /** Optional: zugeordnetes Fahrzeug. */
+  /** Optional: zugeordnetes Fahrzeug (ID aus Fahrzeug-Register). */
   vehicleId?: string;
+  /** Datenherkunft: digital (Tacho) oder manuell vom Fahrer:in. */
+  dataSource?: SegmentDataSource;
+  /** Optionaler Kommentar (z.B. manuelle Ergänzung). */
+  comment?: string;
 };
 
 export type DrivingDay = {

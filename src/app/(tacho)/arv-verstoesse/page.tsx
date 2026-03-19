@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
-import { getMockDrivingData } from "@/mock/drivingData";
+import { Suspense, useMemo, useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
-  getArvViolationsReport,
+  getArvViolationsReportMerged,
   getArvReportFiltersDefault,
 } from "@/mock/arvViolations";
 import type { ArvViolation } from "@/domain/drivingTypes";
@@ -15,20 +15,24 @@ import {
   ArvReportPreview,
 } from "@/components/views/arv-verstoesse";
 
-export default function ARVVerstoessePage() {
-  const { drivers, selectedEmployeeId, setSelectedEmployee } = useSelectedEmployee();
+function ARVVerstoessePageContent() {
+  const searchParams = useSearchParams();
+  const { drivers, setSelectedEmployee } = useSelectedEmployee();
   const [filters, setFilters] = useState(getArvReportFiltersDefault);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reportViolation, setReportViolation] = useState<ArvViolation | null>(
     null
   );
 
+  const urlDriverId = searchParams.get("driverId") ?? "";
+  const urlDate = searchParams.get("date") ?? "";
+
   useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      driverId: selectedEmployeeId ?? "",
-    }));
-  }, [selectedEmployeeId]);
+    if (!urlDriverId) return;
+    const driver = drivers.find((d) => d.id === urlDriverId);
+    setFilters((prev) => ({ ...prev, driverId: urlDriverId }));
+    setSelectedEmployee(urlDriverId, driver ?? undefined);
+  }, [urlDriverId, drivers, setSelectedEmployee]);
 
   const handleFiltersChange = useCallback(
     (next: typeof filters) => {
@@ -43,16 +47,32 @@ export default function ARVVerstoessePage() {
     [drivers, setSelectedEmployee]
   );
 
-  const violations = useMemo(
-    () => getArvViolationsReport(filters),
+  const mergedRows = useMemo(
+    () => getArvViolationsReportMerged(filters),
     [filters]
   );
 
-  const selectedViolation = useMemo(
-    () =>
-      violations.find((v) => (v.id ?? v.date) === selectedId) ?? null,
-    [violations, selectedId]
-  );
+  useEffect(() => {
+    if (!urlDriverId || !urlDate || mergedRows.length === 0) return;
+    const row = mergedRows.find(
+      (r) => r.driverId === urlDriverId && r.date === urlDate
+    );
+    if (row) {
+      const primary = row.corrected ?? row.original;
+      if (primary) setSelectedId(primary.id ?? primary.date);
+    }
+  }, [urlDriverId, urlDate, mergedRows]);
+
+  const selectedViolation = useMemo(() => {
+    if (!selectedId) return null;
+    for (const row of mergedRows) {
+      if (row.original && (row.original.id ?? row.original.date) === selectedId)
+        return row.original;
+      if (row.corrected && (row.corrected.id ?? row.corrected.date) === selectedId)
+        return row.corrected;
+    }
+    return null;
+  }, [mergedRows, selectedId]);
 
   const handleSelect = useCallback((v: ArvViolation) => {
     setSelectedId(v.id ?? v.date);
@@ -70,7 +90,7 @@ export default function ARVVerstoessePage() {
 
   return (
     <div className="flex h-full flex-col">
-      <h1 className="sr-only">ARV-Verstösse</h1>
+      <h1 className="sr-only">Verstösse</h1>
       <ArvFilters
         filters={filters}
         drivers={drivers}
@@ -78,7 +98,7 @@ export default function ARVVerstoessePage() {
       />
       <div className="flex flex-1 min-h-0">
         <ArvViolationTable
-          violations={violations}
+          rows={mergedRows}
           selectedId={selectedId}
           onSelect={handleSelect}
         />
@@ -96,5 +116,13 @@ export default function ARVVerstoessePage() {
         />
       )}
     </div>
+  );
+}
+
+export default function ARVVerstoessePage() {
+  return (
+    <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Laden…</div>}>
+      <ARVVerstoessePageContent />
+    </Suspense>
   );
 }

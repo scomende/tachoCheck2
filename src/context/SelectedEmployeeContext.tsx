@@ -16,7 +16,10 @@ export type SelectedEmployeeState = {
   selectedEmployeeId: string | null;
   selectedDriver: Driver | null;
   drivers: Driver[];
+  /** Suchbegriff aus der Toolbar; filtert die sichtbare Mitarbeitenden-Liste (z. B. Fahrerkarten). */
+  searchQuery: string;
   setSelectedEmployee: (id: string | null, driver?: Driver | null) => void;
+  setSearchQuery: (query: string) => void;
   clearSelection: () => void;
 };
 
@@ -25,6 +28,7 @@ const SelectedEmployeeContext = createContext<SelectedEmployeeState | null>(null
 export function SelectedEmployeeProvider({ children }: { children: ReactNode }) {
   const { drivers } = getMockDrivingData();
   const [selectedEmployeeId, setSelectedEmployeeIdState] = useState<string | null>(null);
+  const [searchQuery, setSearchQueryState] = useState("");
 
   const selectedDriver = useMemo(
     () => drivers.find((d) => d.id === selectedEmployeeId) ?? null,
@@ -42,19 +46,27 @@ export function SelectedEmployeeProvider({ children }: { children: ReactNode }) 
     setSelectedEmployeeIdState(null);
   }, []);
 
+  const setSearchQuery = useCallback((query: string) => {
+    setSearchQueryState(query);
+  }, []);
+
   const value = useMemo<SelectedEmployeeState>(
     () => ({
       selectedEmployeeId,
       selectedDriver,
       drivers,
+      searchQuery,
       setSelectedEmployee,
+      setSearchQuery,
       clearSelection,
     }),
     [
       selectedEmployeeId,
       selectedDriver,
       drivers,
+      searchQuery,
       setSelectedEmployee,
+      setSearchQuery,
       clearSelection,
     ]
   );

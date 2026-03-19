@@ -68,7 +68,7 @@ export function ArvReportPreview({
       >
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <h2 id="arv-report-title" className="text-lg font-semibold text-foreground">
-            ARV-Verstoss-Report
+            Verstoss-Report
           </h2>
           <Button
             variant="ghost"

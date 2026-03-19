@@ -34,27 +34,27 @@ const addDays = (dateStr: string, days: number): string => {
 
 /** Ein typischer Arbeitstag mit Fahrt- und Pausensegmenten. */
 const daySegments = (baseDate: string): DrivingSegment[] => [
-  { start: "06:00", end: "09:30", type: "driving", vehicleId: "V-101" },
-  { start: "09:30", end: "09:45", type: "break" },
-  { start: "09:45", end: "12:00", type: "driving", vehicleId: "V-101" },
-  { start: "12:00", end: "12:45", type: "break" },
-  { start: "12:45", end: "15:00", type: "work" },
-  { start: "15:00", end: "17:30", type: "driving", vehicleId: "V-101" },
+  { start: "06:00", end: "09:30", type: "driving", vehicleId: "V-101", dataSource: "digital" },
+  { start: "09:30", end: "09:45", type: "break", dataSource: "digital" },
+  { start: "09:45", end: "12:00", type: "driving", vehicleId: "V-101", dataSource: "digital" },
+  { start: "12:00", end: "12:45", type: "break", dataSource: "digital" },
+  { start: "12:45", end: "15:00", type: "work", dataSource: "manual" },
+  { start: "15:00", end: "17:30", type: "driving", vehicleId: "V-101", dataSource: "digital" },
 ];
 
 /** Tag mit Bereitschaftszeit (Gelb) für US-01-Demo. */
 const dayWithAvailability: DrivingSegment[] = [
-  { start: "08:00", end: "10:00", type: "driving", vehicleId: "V-101" },
-  { start: "10:00", end: "12:00", type: "availability" },
-  { start: "12:00", end: "12:30", type: "break" },
-  { start: "12:30", end: "14:00", type: "work" },
+  { start: "08:00", end: "10:00", type: "driving", vehicleId: "V-101", dataSource: "digital" },
+  { start: "10:00", end: "12:00", type: "availability", dataSource: "manual" },
+  { start: "12:00", end: "12:30", type: "break", dataSource: "digital" },
+  { start: "12:30", end: "14:00", type: "work", dataSource: "manual" },
 ];
 
 /** Weniger Segmente (z.B. kurzer Tag). */
 const shortDaySegments: DrivingSegment[] = [
-  { start: "08:00", end: "10:00", type: "driving", vehicleId: "V-102" },
-  { start: "10:00", end: "10:15", type: "break" },
-  { start: "10:15", end: "12:00", type: "work" },
+  { start: "08:00", end: "10:00", type: "driving", vehicleId: "V-102", dataSource: "digital" },
+  { start: "10:00", end: "10:15", type: "break", dataSource: "digital" },
+  { start: "10:15", end: "12:00", type: "work", dataSource: "manual" },
 ];
 
 /** Woche ab Montag 2025-05-19: 7 Tage pro Fahrer:in. */
@@ -102,17 +102,17 @@ const MOCK_ARV_VIOLATIONS: ArvViolationsForWeek[] = [
     driverId: "d1",
     weekStart: WEEK_START,
     violations: [
-      { date: addDays(WEEK_START, 1), description: "Maximale Tagesarbeitszeit überschritten", severity: "high" },
-      { date: addDays(WEEK_START, 4), description: "Mindestruhezeit unterschritten", severity: "medium" },
+      { date: addDays(WEEK_START, 1), description: "Maximale Tagesarbeitszeit überschritten", severity: "high", timeRange: { start: "06:00", end: "20:30" } },
+      { date: addDays(WEEK_START, 4), description: "Mindestruhezeit unterschritten", severity: "medium", timeRange: { start: "22:00", end: "24:00" } },
     ],
   },
   {
     driverId: "d2",
     weekStart: WEEK_START,
     violations: [
-      { date: addDays(WEEK_START, 0), description: "Maximale Lenkzeit pro Tag überschritten", severity: "high" },
-      { date: addDays(WEEK_START, 3), description: "Ununterbrochene Fahrtzeit zu lang", severity: "medium" },
-      { date: addDays(WEEK_START, 5), description: "Wöchentliche Ruhezeit verkürzt", severity: "low" },
+      { date: addDays(WEEK_START, 0), description: "Maximale Lenkzeit pro Tag überschritten", severity: "high", timeRange: { start: "06:00", end: "12:30" } },
+      { date: addDays(WEEK_START, 3), description: "Ununterbrochene Fahrtzeit zu lang", severity: "medium", timeRange: { start: "09:00", end: "12:00" } },
+      { date: addDays(WEEK_START, 5), description: "Wöchentliche Ruhezeit verkürzt", severity: "low", timeRange: { start: "00:00", end: "23:59" } },
     ],
   },
   {

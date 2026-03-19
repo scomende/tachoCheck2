@@ -6,6 +6,7 @@ export type {
   TimeString,
   DurationMinutes,
   SegmentType,
+  SegmentDataSource,
   DrivingSegment,
   DrivingDay,
   Driver,

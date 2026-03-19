@@ -136,7 +136,23 @@ export type ArvReportFilters = {
   driverId: string;
   severity: ArvViolationSeverity | "";
   status: ArvViolationStatus | "";
-  useCorrectedData: boolean;
+  /** Nicht mehr genutzt bei Variante „beide Datenbasen gleichzeitig“; bleibt für Kompatibilität. */
+  useCorrectedData?: boolean;
+};
+
+/** Eine Zeile in der kombinierten Tabelle: ein logischer Verstoss mit optional Original- und Korrigiert-Eintrag. */
+export type MergedArvRow = {
+  /** Eindeutiger Schlüssel (driverId|date|violationType). */
+  key: string;
+  driverId: string;
+  date: string;
+  violationType: ArvViolationType | undefined;
+  /** Kurzbeschreibung (von Original oder Korrigiert). */
+  description: string;
+  /** Verstoss in Originaldaten, falls vorhanden. */
+  original: ArvViolation | null;
+  /** Verstoss in Korrigierten Daten, falls vorhanden. */
+  corrected: ArvViolation | null;
 };
 
 const defaultFilters = (): ArvReportFilters => ({
@@ -145,7 +161,6 @@ const defaultFilters = (): ArvReportFilters => ({
   driverId: "",
   severity: "",
   status: "",
-  useCorrectedData: true,
 });
 
 /** Vergleicht zwei Datumsstrings YYYY-MM-DD. */
@@ -156,7 +171,7 @@ export const getArvReportFiltersDefault = (): ArvReportFilters => defaultFilters
 
 /**
  * Liefert die gefilterte Liste der ARV-Verstösse für den Report.
- * Zeitraum, Mitarbeiter, Schweregrad, Status und Original/Korrigiert werden berücksichtigt.
+ * Zeitraum, Mitarbeiter, Schweregrad, Status und optional Original/Korrigiert.
  */
 export const getArvViolationsReport = (
   filters: ArvReportFilters
@@ -166,8 +181,71 @@ export const getArvViolationsReport = (
     if (filters.driverId && v.driverId !== filters.driverId) return false;
     if (filters.severity && v.severity !== filters.severity) return false;
     if (filters.status && v.status !== filters.status) return false;
-    if (v.useCorrectedData !== filters.useCorrectedData) return false;
+    if (filters.useCorrectedData != null && v.useCorrectedData !== filters.useCorrectedData) return false;
     return true;
+  });
+};
+
+/**
+ * Liefert Verstösse als zusammengeführte Zeilen: pro logischem Verstoss (driverId + date + violationType)
+ * je ein Eintrag mit optional Original- und optional Korrigiert-Variante.
+ * Filter: Zeitraum, Mitarbeiter, Schweregrad. Status wird nach dem Zusammenführen angewendet:
+ * Pro Zeile gilt genau ein Status = Korrigiert-Status, falls vorhanden, sonst Original-Status.
+ */
+export const getArvViolationsReportMerged = (
+  filters: ArvReportFilters
+): MergedArvRow[] => {
+  const filtered = MOCK_ARV_VIOLATIONS_REPORT.filter((v) => {
+    if (!dateInRange(v.date, filters.dateFrom, filters.dateTo)) return false;
+    if (filters.driverId && v.driverId !== filters.driverId) return false;
+    if (filters.severity && v.severity !== filters.severity) return false;
+    return true;
+  });
+
+  const byKey = new Map<string, { original: ArvViolation | null; corrected: ArvViolation | null; driverId: string; date: string; violationType: ArvViolationType | undefined; description: string }>();
+  for (const v of filtered) {
+    const key = `${v.driverId}|${v.date}|${v.violationType ?? v.description}`;
+    const existing = byKey.get(key);
+    if (!existing) {
+      byKey.set(key, {
+        driverId: v.driverId ?? "",
+        date: v.date,
+        violationType: v.violationType,
+        description: v.description,
+        original: v.useCorrectedData ? null : v,
+        corrected: v.useCorrectedData ? v : null,
+      });
+    } else {
+      if (v.useCorrectedData) {
+        existing.corrected = v;
+      } else {
+        existing.original = v;
+      }
+    }
+  }
+
+  let rows = Array.from(byKey.entries())
+    .map(([key, { original, corrected, driverId, date, violationType, description }]) => ({
+      key,
+      driverId,
+      date,
+      violationType,
+      description: original?.description ?? corrected?.description ?? description,
+      original,
+      corrected,
+    }));
+
+  if (filters.status) {
+    rows = rows.filter((row) => {
+      const effectiveStatus = row.corrected?.status ?? row.original?.status;
+      return effectiveStatus === filters.status;
+    });
+  }
+
+  return rows.sort((a, b) => {
+    const d = a.date.localeCompare(b.date);
+    if (d !== 0) return d;
+    return (a.driverId ?? "").localeCompare(b.driverId ?? "");
   });
 };
 

@@ -3,39 +3,70 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter, usePathname } from "next/navigation";
-import type { DrivingDay, DrivingSegment } from "@/domain/drivingTypes";
+import { AlertTriangle, AlertCircle, Info } from "lucide-react";
+import type { DrivingDay, DrivingSegment, ArvViolationSeverity, ArvViolation, SegmentType } from "@/domain/drivingTypes";
 import { getMockDrivingData, getArvViolationsForWeek } from "@/mock/drivingData";
+import { getVehicleById, getVehiclesList } from "@/mock/vehicles";
 import { filterDriversBySearch } from "@/lib/driverSearch";
 import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
 import { ArvViolationsPanel } from "@/components/views/arv-violations-panel";
 import {
   formatDayLabel,
   formatDuration,
+  formatDurationHHMM,
   formatWeekLabel,
   getSegmentDurationMinutes,
+  getSegmentEndTimeString,
   getSegmentStartMinutes,
   minutesToPercent,
+  timeStringToMinutes,
   SEGMENT_COLORS,
+  SEGMENT_COLORS_MUTED,
   SEGMENT_LABELS,
 } from "@/lib/drivingUtils";
 import { cn } from "@/lib/utils";
 
-const SEARCH_PARAM = "search";
 const DRIVER_ID_PARAM = "driverId";
+const HIGHLIGHT_DATE_PARAM = "date";
+
+/** Montag (YYYY-MM-DD) der Woche, in der das gegebene Datum liegt. */
+function getWeekStart(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  const day = d.getDay();
+  const daysToMonday = (day + 6) % 7;
+  d.setDate(d.getDate() - daysToMonday);
+  return d.toISOString().slice(0, 10);
+}
+
+const SEVERITY_ICON: Record<
+  ArvViolationSeverity,
+  React.ComponentType<{ className?: string }>
+> = {
+  high: AlertTriangle,
+  medium: AlertCircle,
+  low: Info,
+};
+
+const SEVERITY_ORDER: ArvViolationSeverity[] = ["high", "medium", "low"];
+function highestSeverity(severities: (ArvViolationSeverity | undefined)[]): ArvViolationSeverity | null {
+  for (const s of SEVERITY_ORDER) {
+    if (severities.includes(s)) return s;
+  }
+  return null;
+}
 
 /**
  * US-01: Wochenansicht Fahrerkartendaten.
- * Globale Mitarbeiter:innen-Auswahl (SelectedEmployeeContext): vorausgewählt im Dropdown.
+ * Globale Mitarbeiter:innen-Auswahl (SelectedEmployeeContext): vorausgewählt in der Liste.
  * Bei lokaler Änderung wird die globale Auswahl aktualisiert. URL driverId für Deep-Links.
  */
 export const WeeklyDriverView = () => {
   const { drivers, driverWeeks } = getMockDrivingData();
-  const { selectedEmployeeId, setSelectedEmployee } = useSelectedEmployee();
+  const { selectedEmployeeId, setSelectedEmployee, searchQuery } = useSelectedEmployee();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
 
-  const searchQuery = searchParams.get(SEARCH_PARAM) ?? "";
   const urlDriverId = searchParams.get(DRIVER_ID_PARAM) ?? "";
 
   const filteredDrivers = useMemo(
@@ -49,6 +80,13 @@ export const WeeklyDriverView = () => {
     return fromGlobal ?? fromUrl ?? filteredDrivers[0]?.id ?? "";
   }, [selectedEmployeeId, urlDriverId, filteredDrivers]);
 
+  const [selectedWeekStart, setSelectedWeekStart] = useState<string>("");
+  const [highlightedDate, setHighlightedDate] = useState<string | null>(null);
+  const [expandedDate, setExpandedDate] = useState<string | null>(null);
+  const [expandAllDays, setExpandAllDays] = useState(false);
+  const [editedDaySegments, setEditedDaySegments] = useState<Record<string, DrivingSegment[]>>({});
+  const [hoveredTableSegment, setHoveredTableSegment] = useState<{ date: string; segmentIndex: number } | null>(null);
+
   useEffect(() => {
     if (selectedDriverId && selectedDriverId !== urlDriverId) {
       const next = new URLSearchParams(searchParams.toString());
@@ -57,8 +95,7 @@ export const WeeklyDriverView = () => {
     }
   }, [selectedDriverId, urlDriverId, pathname, searchParams, router]);
 
-  const [selectedWeekStart, setSelectedWeekStart] = useState<string>("");
-  const [highlightedDate, setHighlightedDate] = useState<string | null>(null);
+  const urlHighlightDate = searchParams.get(HIGHLIGHT_DATE_PARAM);
 
   const availableWeeks = useMemo(() => {
     return driverWeeks
@@ -82,22 +119,37 @@ export const WeeklyDriverView = () => {
     }));
   }, [availableWeeks]);
 
-  const handleDriverChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const id = e.target.value;
-    if (!id) return;
-    setHighlightedDate(null);
-    const driver = filteredDrivers.find((d) => d.id === id);
-    setSelectedEmployee(id, driver ?? undefined);
-    const next = new URLSearchParams(searchParams.toString());
-    next.set(DRIVER_ID_PARAM, id);
-    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
-    const firstWeek = driverWeeks.find((w) => w.driverId === id)?.weekStart;
-    setSelectedWeekStart(firstWeek ?? "");
-  };
+  useEffect(() => {
+    if (!urlHighlightDate || !selectedDriverId) return;
+    const weekStart = getWeekStart(urlHighlightDate);
+    if (availableWeeks.includes(weekStart)) {
+      setSelectedWeekStart(weekStart);
+      setHighlightedDate(urlHighlightDate);
+    }
+  }, [urlHighlightDate, selectedDriverId, availableWeeks]);
+
+  const handleDriverSelect = useCallback(
+    (id: string) => {
+      if (!id) return;
+      setHighlightedDate(null);
+      setExpandedDate(null);
+      setEditedDaySegments({});
+      const driver = filteredDrivers.find((d) => d.id === id);
+      setSelectedEmployee(id, driver ?? undefined);
+      const next = new URLSearchParams(searchParams.toString());
+      next.set(DRIVER_ID_PARAM, id);
+      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+      const firstWeek = driverWeeks.find((w) => w.driverId === id)?.weekStart;
+      setSelectedWeekStart(firstWeek ?? "");
+    },
+    [filteredDrivers, driverWeeks, pathname, router, searchParams, setSelectedEmployee]
+  );
 
   const handleWeekChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedWeekStart(e.target.value);
     setHighlightedDate(null);
+    setExpandedDate(null);
+    setEditedDaySegments({});
   };
 
   const violationsForWeek = useMemo(
@@ -153,32 +205,34 @@ export const WeeklyDriverView = () => {
   if (hasNoSearchResults) {
     return (
       <div
-        className="flex w-full flex-col gap-5 rounded border border-border bg-background p-6"
+        className="flex w-full flex-1 gap-0 overflow-hidden rounded border border-border bg-background"
         role="region"
         aria-label="Wochenansicht Fahrerkarten"
       >
-        <div className="flex flex-wrap items-end gap-6">
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="weekly-driver-select"
-              className="text-xs font-medium text-muted-foreground"
-            >
-              Mitarbeitende
-            </label>
-            <select
-              id="weekly-driver-select"
-              value=""
-              disabled
-              aria-label="Mitarbeitende auswählen"
-              className="h-9 min-w-[12rem] rounded border border-border bg-background px-3 text-sm text-muted-foreground"
-            >
-              <option value="">Keine Treffer</option>
-            </select>
+        <aside
+          className="flex w-72 shrink-0 flex-col border-r border-border bg-muted/5"
+          aria-label="Mitarbeitende auswählen"
+        >
+          <h2 className="px-3 py-3 text-xs font-medium text-muted-foreground">
+            Mitarbeitende
+          </h2>
+          <div className="flex-1 overflow-y-auto">
+            <p className="px-3 py-4 text-sm text-muted-foreground">
+              Keine Treffer
+            </p>
           </div>
+        </aside>
+        <div className="flex min-w-0 flex-1 flex-col gap-6 p-6 overflow-auto">
+          <p className="text-sm text-muted-foreground">
+            Keine Treffer. Bitte Suche anpassen.
+          </p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Keine Treffer. Bitte Suche anpassen.
-        </p>
+        <ArvViolationsPanel
+          violations={[]}
+          highlightedDate={null}
+          onSelectDate={handleArvViolationSelectDate}
+          driverId={selectedDriverId || undefined}
+        />
       </div>
     );
   }
@@ -191,33 +245,53 @@ export const WeeklyDriverView = () => {
       role="region"
       aria-label="Wochenansicht Fahrerkarten"
     >
-      <div className="flex min-w-0 flex-1 flex-col gap-6 p-6 overflow-auto">
-      {/* Auswahl Mitarbeitende + Woche */}
-      <div className="flex flex-wrap items-end gap-6">
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="weekly-driver-select"
-            className="text-xs font-medium text-muted-foreground"
+      {/* Sidebar: selektierbare Mitarbeitenden-Liste */}
+      <aside
+        className="flex w-72 shrink-0 flex-col border-r border-border bg-muted/5"
+        aria-label="Mitarbeitende auswählen"
+      >
+        <h2 className="px-3 py-3 text-xs font-medium text-muted-foreground">
+          Mitarbeitende
+        </h2>
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <ul
+            role="listbox"
+            aria-label="Mitarbeitende"
+            aria-activedescendant={selectedDriverId ? `driver-${selectedDriverId}` : undefined}
+            className="py-1"
           >
-            Mitarbeitende
-          </label>
-          <select
-            id="weekly-driver-select"
-            value={selectedDriverId}
-            onChange={handleDriverChange}
-            aria-label="Mitarbeitende auswählen"
-            className={cn(
-              "h-9 min-w-[12rem] rounded border border-border bg-background px-3 text-sm text-foreground",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0"
-            )}
-          >
-            {filteredDrivers.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
+            {filteredDrivers.map((d) => {
+              const isSelected = d.id === selectedDriverId;
+              return (
+                <li key={d.id} id={`driver-${d.id}`} role="option" aria-selected={isSelected}>
+                  <button
+                    type="button"
+                    onClick={() => handleDriverSelect(d.id)}
+                    className={cn(
+                      "w-full cursor-pointer text-left px-3 py-2.5 text-sm transition-colors",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
+                      isSelected
+                        ? "border-l-2 border-l-primary bg-primary/10 font-medium text-foreground"
+                        : "border-l-2 border-l-transparent hover:bg-muted/50 text-foreground"
+                    )}
+                  >
+                    <span className="block truncate">{d.name}</span>
+                    {(d.kostenstelle ?? d.personalNumber) && (
+                      <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                        {[d.kostenstelle, d.personalNumber].filter(Boolean).join(" · ")}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col gap-6 p-6 overflow-auto">
+      {/* Auswahl Woche + Switch Details einblenden */}
+      <div className="flex flex-wrap items-end gap-6">
         <div className="flex flex-col gap-1.5">
           <label
             htmlFor="weekly-week-select"
@@ -242,14 +316,42 @@ export const WeeklyDriverView = () => {
             ))}
           </select>
         </div>
+        <label className="flex cursor-pointer items-center gap-2 self-end pb-1" id="expand-all-days-desc">
+          <span className="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border border-border bg-muted transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 has-[:checked]:bg-primary has-[:checked]:border-primary">
+            <input
+              type="checkbox"
+              checked={expandAllDays}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setExpandAllDays(checked);
+                if (!checked) setExpandedDate(null);
+              }}
+              aria-describedby="expand-all-days-desc"
+              className="sr-only peer"
+            />
+            <span className="pointer-events-none absolute left-0.5 top-1/2 size-3.5 -translate-y-1/2 rounded-full bg-muted-foreground shadow-sm transition-transform peer-checked:translate-x-5 peer-checked:bg-primary-foreground" />
+          </span>
+          <span className="text-sm text-foreground">Details einblenden</span>
+        </label>
+        {Object.keys(editedDaySegments).length > 0 && (
+          <div className="ml-auto self-end pb-1">
+            <button
+              type="button"
+              onClick={() => setEditedDaySegments({})}
+              className="cursor-pointer rounded border border-[#e6c022] bg-[#F7D526] px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-[#e6c022] active:bg-[#d4be20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              Speichern und übermitteln
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Zeitachse 00:00–24:00 */}
-      <div className="overflow-x-auto">
-        <div className="min-w-[600px]">
+      {/* Zeitachse 00:00–24:00 (nutzt verfügbare Breite, kein horizontaler Scroll) */}
+      <div className="min-w-0">
+        <div className="w-full">
           {/* Achsenbeschriftung: Stunden */}
           <div className="mb-2 flex border-b border-border pb-1">
-            <div className="w-20 shrink-0 text-xs text-muted-foreground" aria-hidden />
+            <div className="w-24 shrink-0 text-xs text-muted-foreground" aria-hidden />
             <div className="relative flex flex-1">
               {[0, 4, 8, 12, 16, 20, 24].map((h) => (
                 <span
@@ -263,14 +365,36 @@ export const WeeklyDriverView = () => {
             </div>
           </div>
 
-          {/* Pro Tag eine Zeile */}
-          {days.map((day) => (
-            <DayRow
-              key={day.date}
-              day={day}
-              isHighlighted={day.date === highlightedDate}
-            />
-          ))}
+          {/* Pro Tag eine Zeile + optional Detailtabelle */}
+          {days.map((day) => {
+            const isExpanded = expandAllDays || day.date === expandedDate;
+            return (
+              <div key={day.date}>
+                <DayRow
+                  day={day}
+                  isHighlighted={day.date === highlightedDate}
+                  isExpanded={isExpanded}
+                  hoveredSegmentIndex={hoveredTableSegment?.date === day.date ? hoveredTableSegment.segmentIndex : null}
+                  dayViolations={violationsForWeek.filter((v) => v.date === day.date)}
+                  onDayClick={() => setExpandedDate((prev) => (prev === day.date ? null : day.date))}
+                  onSegmentEnter={(date, index) => setHoveredTableSegment({ date, segmentIndex: index })}
+                  onSegmentLeave={() => setHoveredTableSegment(null)}
+                />
+                {isExpanded && (
+                  <DayDetailTable
+                    day={day}
+                    segments={editedDaySegments[day.date] ?? day.segments}
+                    onSave={(date, segs) => setEditedDaySegments((prev) => ({ ...prev, [date]: segs }))}
+                    onSegmentEnter={(date, index) => setHoveredTableSegment({ date, segmentIndex: index })}
+                    onSegmentLeave={() => setHoveredTableSegment(null)}
+                    highlightedSegmentIndex={hoveredTableSegment?.date === day.date ? hoveredTableSegment.segmentIndex : null}
+                    getVehicleById={getVehicleById}
+                    vehicles={getVehiclesList()}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
       </div>
@@ -279,17 +403,29 @@ export const WeeklyDriverView = () => {
         violations={violationsForWeek}
         highlightedDate={highlightedDate}
         onSelectDate={handleArvViolationSelectDate}
+        driverId={selectedDriverId || undefined}
       />
     </div>
   );
 };
 
+const DATA_SOURCE_LABEL: Record<"digital" | "manual", string> = {
+  digital: "Digital",
+  manual: "Manuell vom Fahrer:in",
+};
+
 type DayRowProps = {
   day: DrivingDay;
   isHighlighted?: boolean;
+  isExpanded?: boolean;
+  hoveredSegmentIndex?: number | null;
+  dayViolations?: ArvViolation[];
+  onDayClick: () => void;
+  onSegmentEnter?: (date: string, index: number) => void;
+  onSegmentLeave?: () => void;
 };
 
-const DayRow = ({ day, isHighlighted = false }: DayRowProps) => {
+const DayRow = ({ day, isHighlighted = false, isExpanded = false, hoveredSegmentIndex = null, dayViolations = [], onDayClick, onSegmentEnter, onSegmentLeave }: DayRowProps) => {
   const [tooltip, setTooltip] = useState<{
     seg: DrivingSegment;
     left: number;
@@ -298,10 +434,15 @@ const DayRow = ({ day, isHighlighted = false }: DayRowProps) => {
 
   const dayLabel = formatDayLabel(day.date);
   const isEmpty = day.segments.length === 0;
+  const severity = dayViolations.length > 0
+    ? highestSeverity(dayViolations.map((v) => v.severity).filter(Boolean) as ArvViolationSeverity[])
+    : null;
+  const SeverityIcon = severity ? SEVERITY_ICON[severity] : null;
 
   const handleSegmentMouseEnter = (
     e: React.MouseEvent<HTMLDivElement>,
-    seg: DrivingSegment
+    seg: DrivingSegment,
+    index: number
   ) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const rowTimeline = e.currentTarget.parentElement;
@@ -310,24 +451,59 @@ const DayRow = ({ day, isHighlighted = false }: DayRowProps) => {
     const left = rect.left - rowRect.left + rect.width / 2;
     const top = rect.top - rowRect.top;
     setTooltip({ seg, left, top });
+    onSegmentEnter?.(day.date, index);
   };
 
-  const handleSegmentMouseLeave = () => setTooltip(null);
+  const handleSegmentMouseLeave = () => {
+    setTooltip(null);
+    onSegmentLeave?.();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onDayClick();
+    }
+  };
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-expanded={isExpanded}
+      aria-label={`${dayLabel}, ${isExpanded ? "Details ausblenden" : "Details anzeigen"}`}
+      onClick={onDayClick}
+      onKeyDown={handleKeyDown}
       className={cn(
-        "flex items-stretch border-b border-border py-2 transition-colors last:border-b-0",
-        isHighlighted && "bg-primary/5 border-l-4 border-l-primary"
+        "flex min-h-10 cursor-pointer items-stretch border-b border-border py-2 transition-colors last:border-b-0 hover:bg-muted/30",
+        isHighlighted && "bg-primary/5 border-l-4 border-l-primary",
+        isExpanded && "bg-muted/20"
       )}
     >
       <div
-        className="flex w-20 shrink-0 items-center text-sm text-foreground"
+        className="flex w-24 min-w-24 shrink-0 items-center gap-1.5 text-sm text-foreground whitespace-nowrap"
         aria-hidden
       >
         {dayLabel}
+        {SeverityIcon && (
+          <span
+            title={severity === "high" ? "Verstoss (Hoch)" : severity === "medium" ? "Verstoss (Mittel)" : "Verstoss (Gering)"}
+            aria-label={severity === "high" ? "Verstoss: Hoch" : severity === "medium" ? "Verstoss: Mittel" : "Verstoss: Gering"}
+            className="inline-flex"
+          >
+            <SeverityIcon
+              className={cn(
+                "size-4 shrink-0",
+                severity === "high" && "text-destructive",
+                severity === "medium" && "text-amber-600",
+                severity === "low" && "text-muted-foreground"
+              )}
+              aria-hidden
+            />
+          </span>
+        )}
       </div>
-      <div className="relative flex flex-1 items-center py-1.5">
+      <div className="relative flex min-h-[2rem] flex-1 items-center py-1.5">
         {/* Hintergrund 00:00–24:00 */}
         <div
           className="absolute inset-0 rounded-sm bg-muted/20"
@@ -335,39 +511,66 @@ const DayRow = ({ day, isHighlighted = false }: DayRowProps) => {
         />
         {isEmpty ? (
           <div
-            className="absolute inset-0 flex items-center justify-center rounded-sm text-xs text-muted-foreground"
+            className="absolute inset-0 flex items-center justify-center rounded-sm text-xs text-muted-foreground whitespace-nowrap"
             style={{ left: "0%", right: "0%", width: "100%" }}
           >
             Ruhezeit
           </div>
         ) : (
-          day.segments.map((seg, i) => {
-            const startMin = getSegmentStartMinutes(seg);
-            const durationMin = getSegmentDurationMinutes(seg);
-            const left = minutesToPercent(startMin);
-            const width = minutesToPercent(durationMin);
-            const colorClass = SEGMENT_COLORS[seg.type];
-            const label = SEGMENT_LABELS[seg.type];
-            const durationStr = formatDuration(durationMin);
+          <>
+            {/* Segmente in matteren Farben */}
+            {day.segments.map((seg, i) => {
+              const startMin = getSegmentStartMinutes(seg);
+              const durationMin = getSegmentDurationMinutes(seg);
+              const left = minutesToPercent(startMin);
+              const width = minutesToPercent(durationMin);
+              const isHovered = hoveredSegmentIndex === i;
+              const colorClass = isHovered ? SEGMENT_COLORS[seg.type] : SEGMENT_COLORS_MUTED[seg.type];
+              const label = SEGMENT_LABELS[seg.type];
+              const durationStr = formatDuration(durationMin);
 
-            return (
-              <div
-                key={`${day.date}-${i}`}
-                className={cn(
-                  "absolute top-1 bottom-1 min-w-[4px] rounded-sm cursor-default opacity-95",
-                  colorClass
-                )}
-                style={{
-                  left: `${left}%`,
-                  width: `${Math.max(width, 2)}%`,
-                }}
-                onMouseEnter={(e) => handleSegmentMouseEnter(e, seg)}
-                onMouseLeave={handleSegmentMouseLeave}
-                role="img"
-                aria-label={`${label} ${seg.start} ${durationStr}`}
-              />
-            );
-          })
+              return (
+                <div
+                  key={`${day.date}-${i}`}
+                  className={cn(
+                    "absolute top-1 bottom-1 min-w-[4px] rounded-sm cursor-default transition-colors",
+                    colorClass
+                  )}
+                  style={{
+                    left: `${left}%`,
+                    width: `${Math.max(width, 2)}%`,
+                  }}
+                  onMouseEnter={(e) => handleSegmentMouseEnter(e, seg, i)}
+                  onMouseLeave={handleSegmentMouseLeave}
+                  role="img"
+                  aria-label={`${label} ${seg.start} ${durationStr}`}
+                />
+              );
+            })}
+            {/* Verstoss-Zeiträume: nur dünner dunkelroter Rahmen, Zeitfarben bleiben sichtbar */}
+            {dayViolations
+              .filter((v): v is ArvViolation & { timeRange: { start: string; end: string } } => !!v.timeRange)
+              .map((v, i) => {
+                const startMin = timeStringToMinutes(v.timeRange!.start);
+                let endMin = timeStringToMinutes(v.timeRange!.end);
+                if (endMin <= startMin) endMin = 24 * 60;
+                const left = minutesToPercent(startMin);
+                const width = minutesToPercent(Math.max(0, endMin - startMin));
+                return (
+                  <div
+                    key={`violation-${day.date}-${i}`}
+                    className="absolute top-1 bottom-1 min-w-[4px] rounded-sm border-2 border-destructive pointer-events-none"
+                    style={{
+                      left: `${left}%`,
+                      width: `${Math.max(width, 2)}%`,
+                    }}
+                    role="img"
+                    aria-label={`Verstoss: ${v.description}, ${v.timeRange!.start} bis ${v.timeRange!.end}`}
+                    title={`Verstoss: ${v.description} (${v.timeRange!.start} – ${v.timeRange!.end})`}
+                  />
+                );
+              })}
+          </>
         )}
         {tooltip && (
           <Tooltip
@@ -403,6 +606,197 @@ const Tooltip = ({ segment, left, top, onClose }: TooltipProps) => {
       <div className="font-medium">{label}</div>
       <div>Start: {segment.start}</div>
       <div>Dauer: {durationStr}</div>
+    </div>
+  );
+};
+
+const SEGMENT_TYPE_OPTIONS: SegmentType[] = ["driving", "break", "work", "availability", "other"];
+
+type VehicleOption = { id: string; licensePlate: string; vehicleNumber: string };
+
+type DayDetailTableProps = {
+  day: DrivingDay;
+  segments: DrivingSegment[];
+  onSave: (date: string, segments: DrivingSegment[]) => void;
+  onSegmentEnter?: (date: string, segmentIndex: number) => void;
+  onSegmentLeave?: () => void;
+  highlightedSegmentIndex?: number | null;
+  getVehicleById: (id: string) => { licensePlate: string; vehicleNumber: string } | undefined;
+  vehicles: VehicleOption[];
+};
+
+const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave, highlightedSegmentIndex = null, getVehicleById, vehicles }: DayDetailTableProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftSegments, setDraftSegments] = useState<DrivingSegment[]>([]);
+
+  const startEditing = () => {
+    setDraftSegments(segments.map((s) => ({ ...s })));
+    setIsEditing(true);
+  };
+
+  const finishEditing = () => {
+    onSave(day.date, draftSegments);
+    setIsEditing(false);
+  };
+
+  const updateSegment = (index: number, patch: Partial<DrivingSegment>) => {
+    setDraftSegments((prev) =>
+      prev.map((seg, i) => (i === index ? { ...seg, ...patch } : seg))
+    );
+  };
+
+  if (segments.length === 0) {
+    return (
+      <div className="border-b border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
+        Keine Segmentdaten für diesen Tag.
+      </div>
+    );
+  }
+
+  const displaySegments = isEditing ? draftSegments : segments;
+
+  return (
+    <div className="border-b border-border bg-muted/10">
+      <div className="overflow-x-auto px-4 py-3">
+        <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
+          <thead className="sticky top-0 z-10 border-b border-border bg-muted/50">
+            <tr>
+              <th colSpan={7} className="px-4 py-3 text-right">
+                {!isEditing ? (
+                  <button
+                    type="button"
+                    onClick={startEditing}
+                    className="rounded border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    Tabelle editieren
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={finishEditing}
+                    className="rounded border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  >
+                    Fertig
+                  </button>
+                )}
+              </th>
+            </tr>
+            <tr>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tätigkeitsart</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Startzeit</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Endzeit</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Dauer</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fahrzeug</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Datenherkunft</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Kommentar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {displaySegments.map((seg, i) => {
+              const vehicle = seg.vehicleId ? getVehicleById(seg.vehicleId) : undefined;
+              const vehicleLabel = vehicle
+                ? `${vehicle.licensePlate}, Nr. ${vehicle.vehicleNumber}`
+                : "–";
+              const dataSourceLabel =
+                seg.dataSource != null ? DATA_SOURCE_LABEL[seg.dataSource] : "–";
+              return (
+                <tr
+                  key={`${day.date}-${i}`}
+                  className={cn(
+                    "border-b border-border/60 last:border-b-0",
+                    highlightedSegmentIndex === i && "bg-muted/40"
+                  )}
+                  onMouseEnter={() => onSegmentEnter?.(day.date, i)}
+                  onMouseLeave={() => onSegmentLeave?.()}
+                >
+                  {!isEditing ? (
+                    <>
+                      <td className="py-2 pr-4 text-foreground">{SEGMENT_LABELS[seg.type]}</td>
+                      <td className="py-2 pr-4 text-foreground">{seg.start.slice(0, 5)}</td>
+                      <td className="py-2 pr-4 text-foreground">{getSegmentEndTimeString(seg)}</td>
+                      <td className="py-2 pr-4 text-foreground">
+                        {formatDurationHHMM(getSegmentDurationMinutes(seg))}
+                      </td>
+                      <td className="py-2 pr-4 text-foreground">{vehicleLabel}</td>
+                      <td className="py-2 pr-4 text-foreground">{dataSourceLabel}</td>
+                      <td className="py-2 text-foreground">{seg.comment ?? "–"}</td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="py-1 pr-4">
+                        <select
+                          value={seg.type}
+                          onChange={(e) => updateSegment(i, { type: e.target.value as SegmentType })}
+                          className="w-full min-w-[10rem] rounded border border-border bg-background px-2 py-1 text-foreground"
+                        >
+                          {SEGMENT_TYPE_OPTIONS.map((t) => (
+                            <option key={t} value={t}>
+                              {SEGMENT_LABELS[t]}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="py-1 pr-4">
+                        <input
+                          type="time"
+                          value={seg.start.slice(0, 5)}
+                          onChange={(e) => updateSegment(i, { start: e.target.value })}
+                          className="w-24 rounded border border-border bg-background px-2 py-1 text-foreground"
+                        />
+                      </td>
+                      <td className="py-1 pr-4">
+                        <input
+                          type="time"
+                          value={getSegmentEndTimeString(seg).slice(0, 5)}
+                          onChange={(e) =>
+                            updateSegment(i, { end: e.target.value, duration: undefined })
+                          }
+                          className="w-24 rounded border border-border bg-background px-2 py-1 text-foreground"
+                        />
+                      </td>
+                      <td className="py-1 pr-4 text-foreground">
+                        {formatDurationHHMM(getSegmentDurationMinutes(seg))}
+                      </td>
+                      <td className="py-1 pr-4">
+                        {seg.vehicleId ? (
+                          <span className="text-foreground">{vehicleLabel}</span>
+                        ) : (
+                          <select
+                            value={seg.vehicleId ?? ""}
+                            onChange={(e) =>
+                              updateSegment(i, { vehicleId: e.target.value || undefined })
+                            }
+                            className="w-full min-w-[10rem] rounded border border-border bg-background px-2 py-1 text-foreground"
+                          >
+                            <option value="">–</option>
+                            {vehicles.map((v) => (
+                              <option key={v.id} value={v.id}>
+                                {v.licensePlate}, Nr. {v.vehicleNumber}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
+                      <td className="py-1 pr-4 text-foreground">
+                        {seg.dataSource != null ? DATA_SOURCE_LABEL[seg.dataSource] : "–"}
+                      </td>
+                      <td className="py-1">
+                        <input
+                          type="text"
+                          value={seg.comment ?? ""}
+                          onChange={(e) => updateSegment(i, { comment: e.target.value || undefined })}
+                          placeholder="Kommentar"
+                          className="w-full min-w-[8rem] rounded border border-border bg-background px-2 py-1 text-foreground placeholder:text-muted-foreground"
+                        />
+                      </td>
+                    </>
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

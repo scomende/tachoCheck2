@@ -27,6 +27,17 @@ export const getSegmentDurationMinutes = (seg: DrivingSegment): number => {
 export const getSegmentStartMinutes = (seg: DrivingSegment): number =>
   timeStringToMinutes(seg.start);
 
+/** Endzeit als "HH:mm" (aus seg.end oder aus Start + Dauer). */
+export const getSegmentEndTimeString = (seg: DrivingSegment): string => {
+  if (seg.end != null) return seg.end.slice(0, 5);
+  const startMin = timeStringToMinutes(seg.start);
+  const durationMin = getSegmentDurationMinutes(seg);
+  const endMin = startMin + durationMin;
+  const h = Math.floor(endMin / 60) % 24;
+  const m = endMin % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+};
+
 /** Prozent der Tageslänge (0–100) für Position/Breite. */
 export const minutesToPercent = (minutes: number): number =>
   (minutes / MINUTES_PER_DAY) * 100;
@@ -38,6 +49,15 @@ export const SEGMENT_COLORS: Record<SegmentType, string> = {
   availability: "bg-yellow-400", // Bereitschaftszeit = Gelb
   break: "bg-green-500",       // Ruhezeit = Grün
   other: "bg-green-400",       // Ruhezeit = Grün
+};
+
+/** Mattere Segmentfarben für Wochenansicht (bessere Lesbarkeit, Verstösse heben sich ab). */
+export const SEGMENT_COLORS_MUTED: Record<SegmentType, string> = {
+  driving: "bg-red-300/70",
+  work: "bg-blue-300/70",
+  availability: "bg-amber-200/80",
+  break: "bg-green-300/70",
+  other: "bg-green-200/70",
 };
 
 /** Segmenttyp → Anzeigename. */
@@ -101,4 +121,11 @@ export const formatDuration = (minutes: number): string => {
   if (h === 0) return `${m} min`;
   if (m === 0) return `${h} h`;
   return `${h} h ${m} min`;
+};
+
+/** Dauer in Minuten → "hh:mm" (z.B. 165 → "02:45") für Tagesdetail-Tabelle. */
+export const formatDurationHHMM = (minutes: number): string => {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 };
