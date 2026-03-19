@@ -55,4 +55,6 @@ export type ExportConfig = {
   /** Optionale Region/Kostenstelle. */
   region?: string;
   format: ExportFormat;
+  /** Welche Exportbestandteile im Paket enthalten sein sollen. */
+  includedPartIds: ExportPartType[];
 };

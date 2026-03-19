@@ -25,4 +25,4 @@ export type {
   ControlExport,
   ExportConfig,
 } from "./controlExportTypes";
-export type { VehicleSource, VehicleQualification, Vehicle } from "./vehicleTypes";
+export type { VehicleSource, VehicleQualification, Vehicle, VehicleSymbolType } from "./vehicleTypes";

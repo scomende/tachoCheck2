@@ -6,6 +6,17 @@
 /** Herkunft des Fahrzeugs. */
 export type VehicleSource = "imported" | "manual";
 
+/**
+ * LKW-Symbol für die Spalte „Symbole“ (analog Symbolpalette: Pritsche, Elektro, Flüssigkeit, Öko, Koffer, Sattel).
+ */
+export type VehicleSymbolType =
+  | "flatbed"
+  | "electric"
+  | "liquid"
+  | "eco"
+  | "box"
+  | "articulated";
+
 /** Optionale Qualifikation / Eigenschaft eines Fahrzeugs. */
 export type VehicleQualification = {
   id: string;
@@ -23,6 +34,12 @@ export type Vehicle = {
   vehicleNumber: string;
   /** Bezeichnung / Typ */
   displayName: string;
+  /** Symbol in der Fahrzeugliste (LKW-Icon). */
+  symbolType: VehicleSymbolType;
+  /** Zugeordnete Mitarbeitende (Anzeigenamen). */
+  assignedEmployees: string[];
+  /** Gültig ab (YYYY-MM-DD). */
+  validFrom: string;
   source: VehicleSource;
   isCoopVehicle: boolean;
   /** Aus Schnittstelle: nicht bearbeitbar; manuell: bearbeitbar */

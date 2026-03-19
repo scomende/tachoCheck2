@@ -1,6 +1,7 @@
 "use client";
 
 import type { ExportConfig } from "@/domain/controlExportTypes";
+import { ALL_EXPORT_PART_IDS } from "@/mock/controlExports";
 import { getDriverNameById } from "@/mock/arvViolations";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,9 @@ export function ExportConfigCard({ config, className }: ExportConfigCardProps) {
       ? config.driverIds.map(getDriverNameById).join(", ")
       : "Keine Auswahl";
 
+  const included = config.includedPartIds ?? ALL_EXPORT_PART_IDS;
+  const partSummary = `${included.length} von ${ALL_EXPORT_PART_IDS.length}`;
+
   return (
     <Card className={cn("border-border", className)}>
       <CardHeader className="pb-1">
@@ -40,6 +44,8 @@ export function ExportConfigCard({ config, className }: ExportConfigCardProps) {
           )}
           <dt className="text-muted-foreground">Format:</dt>
           <dd>.{config.format}</dd>
+          <dt className="text-muted-foreground">Exportbestandteile:</dt>
+          <dd>{partSummary}</dd>
         </dl>
       </CardContent>
     </Card>

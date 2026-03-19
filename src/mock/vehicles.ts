@@ -16,6 +16,9 @@ export const MOCK_VEHICLES: Vehicle[] = [
     licensePlate: "ZH 123 456",
     vehicleNumber: "FZ-10001",
     displayName: "LKW RailCare 12",
+    symbolType: "electric",
+    assignedEmployees: ["Müller Anna", "Keller Bruno"],
+    validFrom: "2024-01-15",
     source: "imported",
     editable: false,
     isCoopVehicle: true,
@@ -28,6 +31,9 @@ export const MOCK_VEHICLES: Vehicle[] = [
     licensePlate: "GE 789 012",
     vehicleNumber: "FZ-10002",
     displayName: "Transgourmet Kühl 3",
+    symbolType: "liquid",
+    assignedEmployees: ["De Luca Robert"],
+    validFrom: "2023-09-01",
     source: "imported",
     editable: false,
     isCoopVehicle: true,
@@ -40,6 +46,9 @@ export const MOCK_VEHICLES: Vehicle[] = [
     licensePlate: "BE 345 678",
     vehicleNumber: "FZ-20001",
     displayName: "TwoSpice Lieferwagen",
+    symbolType: "box",
+    assignedEmployees: [],
+    validFrom: "2025-03-01",
     source: "manual",
     editable: true,
     isCoopVehicle: false,
@@ -51,6 +60,9 @@ export const MOCK_VEHICLES: Vehicle[] = [
     licensePlate: "ZH 400 101",
     vehicleNumber: "101",
     displayName: "LKW RailCare 12",
+    symbolType: "eco",
+    assignedEmployees: ["Müller Anna"],
+    validFrom: "2024-06-01",
     source: "imported",
     editable: false,
     isCoopVehicle: true,
@@ -61,6 +73,9 @@ export const MOCK_VEHICLES: Vehicle[] = [
     licensePlate: "ZH 400 102",
     vehicleNumber: "102",
     displayName: "Transporter Kurz",
+    symbolType: "articulated",
+    assignedEmployees: ["Keller Bruno", "De Luca Robert"],
+    validFrom: "2025-01-10",
     source: "imported",
     editable: false,
     isCoopVehicle: true,
@@ -81,10 +96,12 @@ export type VehicleFilters = {
 function matchesSearch(v: Vehicle, search: string): boolean {
   const q = search.trim().toLowerCase();
   if (!q) return true;
+  const employees = v.assignedEmployees.join(" ").toLowerCase();
   return (
     v.licensePlate.toLowerCase().includes(q) ||
     v.vehicleNumber.toLowerCase().includes(q) ||
-    v.displayName.toLowerCase().includes(q)
+    v.displayName.toLowerCase().includes(q) ||
+    employees.includes(q)
   );
 }
 
@@ -110,11 +127,15 @@ export type CreateVehicleInput = {
 };
 
 export function createVehicle(input: CreateVehicleInput): Vehicle {
+  const today = new Date().toISOString().slice(0, 10);
   const vehicle: Vehicle = {
     id: generateVehicleId(),
     licensePlate: input.licensePlate.trim(),
     vehicleNumber: input.vehicleNumber.trim(),
     displayName: input.displayName.trim(),
+    symbolType: "box",
+    assignedEmployees: [],
+    validFrom: today,
     source: "manual",
     editable: true,
     isCoopVehicle: input.isCoopVehicle,
@@ -124,7 +145,19 @@ export function createVehicle(input: CreateVehicleInput): Vehicle {
   return vehicle;
 }
 
-export type UpdateVehicleInput = Partial<Pick<Vehicle, "licensePlate" | "vehicleNumber" | "displayName" | "isCoopVehicle" | "qualifications">>;
+export type UpdateVehicleInput = Partial<
+  Pick<
+    Vehicle,
+    | "licensePlate"
+    | "vehicleNumber"
+    | "displayName"
+    | "isCoopVehicle"
+    | "qualifications"
+    | "symbolType"
+    | "assignedEmployees"
+    | "validFrom"
+  >
+>;
 
 export function updateVehicle(id: string, input: UpdateVehicleInput): Vehicle | null {
   const index = vehiclesList.findIndex((v) => v.id === id);
@@ -139,6 +172,9 @@ export function updateVehicle(id: string, input: UpdateVehicleInput): Vehicle | 
     displayName: input.displayName ?? current.displayName,
     isCoopVehicle: input.isCoopVehicle ?? current.isCoopVehicle,
     qualifications: input.qualifications ?? current.qualifications,
+    symbolType: input.symbolType ?? current.symbolType,
+    assignedEmployees: input.assignedEmployees ?? current.assignedEmployees,
+    validFrom: input.validFrom ?? current.validFrom,
   };
   return vehiclesList[index];
 }

@@ -20,12 +20,14 @@ export const STATUS_LABELS: Record<ArvViolationStatus, string> = {
   closed: "Abgeschlossen",
 };
 
-/** Sehr helle Hintergrundfarben für Status-Badges (z. B. in Original/Korrigiert-Spalten). */
+/**
+ * Status-Badges: immer Light-Mode-Farben (auch bei dunklem App-Theme), für einheitliche Lesbarkeit.
+ */
 export const STATUS_BG_COLORS: Record<ArvViolationStatus, string> = {
-  open: "bg-yellow-100 text-yellow-900 dark:bg-yellow-950 dark:text-yellow-200",
-  acknowledged: "bg-green-100 text-green-900 dark:bg-green-950 dark:text-green-200",
-  signed: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
-  closed: "bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-200",
+  open: "bg-amber-50 text-amber-950",
+  acknowledged: "bg-emerald-50 text-emerald-950",
+  signed: "bg-slate-100 text-slate-900",
+  closed: "bg-sky-50 text-sky-950",
 };
 
 export const VIOLATION_TYPE_LABELS: Record<ArvViolationType, string> = {

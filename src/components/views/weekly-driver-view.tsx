@@ -86,6 +86,8 @@ export const WeeklyDriverView = () => {
   const [expandAllDays, setExpandAllDays] = useState(false);
   const [editedDaySegments, setEditedDaySegments] = useState<Record<string, DrivingSegment[]>>({});
   const [hoveredTableSegment, setHoveredTableSegment] = useState<{ date: string; segmentIndex: number } | null>(null);
+  /** Gelber Hintergrund (#FFF8E6) nur für per Klick gewählte Zeile; bei „Details einblenden“ aus bis zur nächsten Klickwahl. */
+  const [yellowHighlightDate, setYellowHighlightDate] = useState<string | null>(null);
 
   useEffect(() => {
     if (selectedDriverId && selectedDriverId !== urlDriverId) {
@@ -133,6 +135,7 @@ export const WeeklyDriverView = () => {
       if (!id) return;
       setHighlightedDate(null);
       setExpandedDate(null);
+      setYellowHighlightDate(null);
       setEditedDaySegments({});
       const driver = filteredDrivers.find((d) => d.id === id);
       setSelectedEmployee(id, driver ?? undefined);
@@ -149,6 +152,7 @@ export const WeeklyDriverView = () => {
     setSelectedWeekStart(e.target.value);
     setHighlightedDate(null);
     setExpandedDate(null);
+    setYellowHighlightDate(null);
     setEditedDaySegments({});
   };
 
@@ -324,6 +328,7 @@ export const WeeklyDriverView = () => {
               onChange={(e) => {
                 const checked = e.target.checked;
                 setExpandAllDays(checked);
+                setYellowHighlightDate(null);
                 if (!checked) setExpandedDate(null);
               }}
               aria-describedby="expand-all-days-desc"
@@ -368,15 +373,27 @@ export const WeeklyDriverView = () => {
           {/* Pro Tag eine Zeile + optional Detailtabelle */}
           {days.map((day) => {
             const isExpanded = expandAllDays || day.date === expandedDate;
+            const isCreamHighlight = yellowHighlightDate === day.date;
             return (
               <div key={day.date}>
                 <DayRow
                   day={day}
                   isHighlighted={day.date === highlightedDate}
                   isExpanded={isExpanded}
+                  isCreamHighlight={isCreamHighlight}
                   hoveredSegmentIndex={hoveredTableSegment?.date === day.date ? hoveredTableSegment.segmentIndex : null}
                   dayViolations={violationsForWeek.filter((v) => v.date === day.date)}
-                  onDayClick={() => setExpandedDate((prev) => (prev === day.date ? null : day.date))}
+                  onDayClick={() => {
+                    setExpandedDate((prev) => {
+                      const next = prev === day.date ? null : day.date;
+                      if (expandAllDays) {
+                        setYellowHighlightDate(day.date);
+                      } else {
+                        setYellowHighlightDate(next);
+                      }
+                      return next;
+                    });
+                  }}
                   onSegmentEnter={(date, index) => setHoveredTableSegment({ date, segmentIndex: index })}
                   onSegmentLeave={() => setHoveredTableSegment(null)}
                 />
@@ -390,6 +407,7 @@ export const WeeklyDriverView = () => {
                     highlightedSegmentIndex={hoveredTableSegment?.date === day.date ? hoveredTableSegment.segmentIndex : null}
                     getVehicleById={getVehicleById}
                     vehicles={getVehiclesList()}
+                    isSelectedDay={isCreamHighlight}
                   />
                 )}
               </div>
@@ -414,10 +432,20 @@ const DATA_SOURCE_LABEL: Record<"digital" | "manual", string> = {
   manual: "Manuell vom Fahrer:in",
 };
 
+/** Schmale Spalten für Start/Ende/Dauer (HH:mm); links wie die Tageszeile (w-24) eingerückt. */
+const DETAIL_TABLE_INDENT = "pl-24";
+const TIME_COL = "w-[4.25rem] min-w-[4.25rem] max-w-[4.5rem] whitespace-nowrap px-2 tabular-nums";
+
+/** Ausgewählte Datums-Zeile + zugehörige Detailtabelle (nur wenn aufgeklappt). */
+const SELECTED_DAY_BG = "bg-[#FFF8E6]";
+const SELECTED_DAY_BG_HOVER = "hover:bg-[#FFF2CC]";
+
 type DayRowProps = {
   day: DrivingDay;
   isHighlighted?: boolean;
   isExpanded?: boolean;
+  /** Gelber Hintergrund (#FFF8E6) nur wenn diese Zeile per Klick gewählt ist. */
+  isCreamHighlight?: boolean;
   hoveredSegmentIndex?: number | null;
   dayViolations?: ArvViolation[];
   onDayClick: () => void;
@@ -425,7 +453,7 @@ type DayRowProps = {
   onSegmentLeave?: () => void;
 };
 
-const DayRow = ({ day, isHighlighted = false, isExpanded = false, hoveredSegmentIndex = null, dayViolations = [], onDayClick, onSegmentEnter, onSegmentLeave }: DayRowProps) => {
+const DayRow = ({ day, isHighlighted = false, isExpanded = false, isCreamHighlight = false, hoveredSegmentIndex = null, dayViolations = [], onDayClick, onSegmentEnter, onSegmentLeave }: DayRowProps) => {
   const [tooltip, setTooltip] = useState<{
     seg: DrivingSegment;
     left: number;
@@ -475,9 +503,10 @@ const DayRow = ({ day, isHighlighted = false, isExpanded = false, hoveredSegment
       onClick={onDayClick}
       onKeyDown={handleKeyDown}
       className={cn(
-        "flex min-h-10 cursor-pointer items-stretch border-b border-border py-2 transition-colors last:border-b-0 hover:bg-muted/30",
+        "flex min-h-10 cursor-pointer items-stretch border-b border-border py-2 transition-colors last:border-b-0",
+        !isCreamHighlight && "hover:bg-muted/30",
         isHighlighted && "bg-primary/5 border-l-4 border-l-primary",
-        isExpanded && "bg-muted/20"
+        isCreamHighlight && cn(SELECTED_DAY_BG, SELECTED_DAY_BG_HOVER)
       )}
     >
       <div
@@ -623,9 +652,11 @@ type DayDetailTableProps = {
   highlightedSegmentIndex?: number | null;
   getVehicleById: (id: string) => { licensePlate: string; vehicleNumber: string } | undefined;
   vehicles: VehicleOption[];
+  /** Gleiche Hintergrundfarbe wie die aufgeklappte Datums-Zeile (#FFF8E6). */
+  isSelectedDay?: boolean;
 };
 
-const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave, highlightedSegmentIndex = null, getVehicleById, vehicles }: DayDetailTableProps) => {
+const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave, highlightedSegmentIndex = null, getVehicleById, vehicles, isSelectedDay = false }: DayDetailTableProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [draftSegments, setDraftSegments] = useState<DrivingSegment[]>([]);
 
@@ -647,7 +678,13 @@ const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave,
 
   if (segments.length === 0) {
     return (
-      <div className="border-b border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
+      <div
+        className={cn(
+          "border-b border-border py-3 pr-4 text-sm text-muted-foreground",
+          DETAIL_TABLE_INDENT,
+          isSelectedDay ? SELECTED_DAY_BG : "bg-muted/10"
+        )}
+      >
         Keine Segmentdaten für diesen Tag.
       </div>
     );
@@ -656,10 +693,15 @@ const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave,
   const displaySegments = isEditing ? draftSegments : segments;
 
   return (
-    <div className="border-b border-border bg-muted/10">
-      <div className="overflow-x-auto px-4 py-3">
-        <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
-          <thead className="sticky top-0 z-10 border-b border-border bg-muted/50">
+    <div className={cn("border-b border-border", isSelectedDay ? SELECTED_DAY_BG : "bg-muted/10")}>
+      <div className={cn("overflow-x-auto py-3 pr-4", DETAIL_TABLE_INDENT)}>
+        <table className="w-full min-w-[32rem] border-collapse text-left text-sm">
+          <thead
+            className={cn(
+              "sticky top-0 z-10 border-b border-border",
+              isSelectedDay ? SELECTED_DAY_BG : "bg-muted/50"
+            )}
+          >
             <tr>
               <th colSpan={7} className="px-4 py-3 text-right">
                 {!isEditing ? (
@@ -683,9 +725,9 @@ const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave,
             </tr>
             <tr>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tätigkeitsart</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Startzeit</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Endzeit</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Dauer</th>
+              <th className={cn("py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground", TIME_COL)}>Startzeit</th>
+              <th className={cn("py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground", TIME_COL)}>Endzeit</th>
+              <th className={cn("py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground", TIME_COL)}>Dauer</th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fahrzeug</th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Datenherkunft</th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Kommentar</th>
@@ -712,9 +754,9 @@ const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave,
                   {!isEditing ? (
                     <>
                       <td className="py-2 pr-4 text-foreground">{SEGMENT_LABELS[seg.type]}</td>
-                      <td className="py-2 pr-4 text-foreground">{seg.start.slice(0, 5)}</td>
-                      <td className="py-2 pr-4 text-foreground">{getSegmentEndTimeString(seg)}</td>
-                      <td className="py-2 pr-4 text-foreground">
+                      <td className={cn("py-2 text-foreground", TIME_COL)}>{seg.start.slice(0, 5)}</td>
+                      <td className={cn("py-2 text-foreground", TIME_COL)}>{getSegmentEndTimeString(seg)}</td>
+                      <td className={cn("py-2 text-foreground", TIME_COL)}>
                         {formatDurationHHMM(getSegmentDurationMinutes(seg))}
                       </td>
                       <td className="py-2 pr-4 text-foreground">{vehicleLabel}</td>
@@ -736,25 +778,25 @@ const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave,
                           ))}
                         </select>
                       </td>
-                      <td className="py-1 pr-4">
+                      <td className={cn("py-1", TIME_COL)}>
                         <input
                           type="time"
                           value={seg.start.slice(0, 5)}
                           onChange={(e) => updateSegment(i, { start: e.target.value })}
-                          className="w-24 rounded border border-border bg-background px-2 py-1 text-foreground"
+                          className="w-full min-w-0 max-w-[4.25rem] rounded border border-border bg-background px-1 py-1 text-foreground"
                         />
                       </td>
-                      <td className="py-1 pr-4">
+                      <td className={cn("py-1", TIME_COL)}>
                         <input
                           type="time"
                           value={getSegmentEndTimeString(seg).slice(0, 5)}
                           onChange={(e) =>
                             updateSegment(i, { end: e.target.value, duration: undefined })
                           }
-                          className="w-24 rounded border border-border bg-background px-2 py-1 text-foreground"
+                          className="w-full min-w-0 max-w-[4.25rem] rounded border border-border bg-background px-1 py-1 text-foreground"
                         />
                       </td>
-                      <td className="py-1 pr-4 text-foreground">
+                      <td className={cn("py-1 text-foreground", TIME_COL)}>
                         {formatDurationHHMM(getSegmentDurationMinutes(seg))}
                       </td>
                       <td className="py-1 pr-4">

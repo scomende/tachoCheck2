@@ -3,6 +3,13 @@
 import { Check, X, Lock, Pencil } from "lucide-react";
 import type { Vehicle } from "@/domain/vehicleTypes";
 import { cn } from "@/lib/utils";
+import { VehicleSymbolIcon } from "./VehicleSymbolIcon";
+
+function formatValidFrom(iso: string): string {
+  const [y, m, d] = iso.split("-");
+  if (!y || !m || !d) return iso;
+  return `${d}.${m}.${y}`;
+}
 
 const SOURCE_LABEL: Record<Vehicle["source"], string> = {
   imported: "Importiert",
@@ -34,6 +41,9 @@ export function FahrzeugTable({
             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Kennzeichen</th>
             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fahrzeugnummer</th>
             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bezeichnung / Typ</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Symbole</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mitarbeitende</th>
+            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Gültig ab</th>
             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quelle</th>
             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Coop-Fahrzeug</th>
             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Editierbar</th>
@@ -42,7 +52,7 @@ export function FahrzeugTable({
         <tbody>
           {vehicles.length === 0 ? (
             <tr>
-              <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted-foreground">
+              <td colSpan={9} className="px-4 py-12 text-center text-sm text-muted-foreground">
                 Keine Fahrzeuge gefunden
               </td>
             </tr>
@@ -78,6 +88,15 @@ export function FahrzeugTable({
                   </td>
                   <td className="px-4 py-3 text-foreground">
                     {v.displayName}
+                  </td>
+                  <td className="px-4 py-3">
+                    <VehicleSymbolIcon type={v.symbolType} />
+                  </td>
+                  <td className="px-4 py-3 text-foreground">
+                    {v.assignedEmployees.length > 0 ? v.assignedEmployees.join(", ") : "–"}
+                  </td>
+                  <td className="px-4 py-3 tabular-nums text-foreground">
+                    {formatValidFrom(v.validFrom)}
                   </td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">

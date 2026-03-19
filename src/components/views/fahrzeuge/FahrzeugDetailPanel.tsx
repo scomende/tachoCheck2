@@ -7,7 +7,14 @@ import { updateVehicle } from "@/mock/vehicles";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MatchingHint } from "./MatchingHint";
+import { VehicleSymbolIcon } from "./VehicleSymbolIcon";
 import { cn } from "@/lib/utils";
+
+function formatValidFrom(iso: string): string {
+  const [y, m, d] = iso.split("-");
+  if (!y || !m || !d) return iso;
+  return `${d}.${m}.${y}`;
+}
 
 const SOURCE_LABEL: Record<Vehicle["source"], string> = {
   imported: "Importiert",
@@ -181,6 +188,21 @@ export function FahrzeugDetailPanel({
             ) : (
               <p className="text-sm text-foreground">{vehicle.displayName}</p>
             )}
+          </div>
+
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-medium text-muted-foreground">Symbole</span>
+            <VehicleSymbolIcon type={vehicle.symbolType} className="mt-0.5" />
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-medium text-muted-foreground">Mitarbeitende</span>
+            <p className="text-sm text-foreground">
+              {vehicle.assignedEmployees.length > 0 ? vehicle.assignedEmployees.join(", ") : "–"}
+            </p>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-medium text-muted-foreground">Gültig ab</span>
+            <p className="text-sm tabular-nums text-foreground">{formatValidFrom(vehicle.validFrom)}</p>
           </div>
 
           {vehicle.qualifications && vehicle.qualifications.length > 0 && (

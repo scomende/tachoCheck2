@@ -2,7 +2,22 @@
  * Mock-Daten und -Logik für Betriebskontrolle-Export.
  * Kein Backend – Export „generieren“ fügt nur einen Eintrag in die Historie ein.
  */
-import type { ControlExport, ExportConfig, ExportPart, ExportPartStatus } from "@/domain/controlExportTypes";
+import type {
+  ControlExport,
+  ExportConfig,
+  ExportPart,
+  ExportPartStatus,
+  ExportPartType,
+} from "@/domain/controlExportTypes";
+
+/** Alle verfügbaren Exportbestandteile (Reihenfolge der Anzeige). */
+export const ALL_EXPORT_PART_IDS: ExportPartType[] = [
+  "driver_cards",
+  "arv_reports",
+  "avg_work_time",
+  "personal_data",
+  "mass_storage",
+];
 
 const EXPORT_PARTS: Omit<ExportPart, "status">[] = [
   { id: "driver_cards", label: "Fahrerkartendateien" },
@@ -74,7 +89,9 @@ export function createExport(
   config: ExportConfig,
   responsiblePerson: string
 ): CreateExportResult {
-  const parts = getExportPartsWithStatus(config);
+  const allParts = getExportPartsWithStatus(config);
+  const included = new Set(config.includedPartIds ?? ALL_EXPORT_PART_IDS);
+  const parts = allParts.filter((p) => included.has(p.id));
   const exportEntry: ControlExport = {
     id: generateExportId(),
     createdAt: new Date().toISOString(),

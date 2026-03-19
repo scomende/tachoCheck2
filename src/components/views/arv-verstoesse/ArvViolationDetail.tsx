@@ -7,7 +7,7 @@ import { getDriverNameById } from "@/mock/arvViolations";
 import { formatDayLabelLong } from "@/lib/drivingUtils";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { SEVERITY_LABELS, STATUS_LABELS } from "./constants";
+import { SEVERITY_LABELS, STATUS_BG_COLORS, STATUS_LABELS } from "./constants";
 import { cn } from "@/lib/utils";
 
 const SEVERITY_ICON: Record<
@@ -135,7 +135,12 @@ export function ArvViolationDetail({
                 Status
               </span>
               <p className="text-sm">
-                <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                    STATUS_BG_COLORS[violation.status]
+                  )}
+                >
                   {STATUS_LABELS[violation.status]}
                 </span>
               </p>

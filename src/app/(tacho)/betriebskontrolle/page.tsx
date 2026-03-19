@@ -3,10 +3,12 @@
 import { useCallback, useState, useMemo, useEffect } from "react";
 import { getMockDrivingData } from "@/mock/drivingData";
 import {
+  ALL_EXPORT_PART_IDS,
   getExportPartsWithStatus,
   createExport,
   getExportHistory,
 } from "@/mock/controlExports";
+import type { ExportPartType } from "@/domain/controlExportTypes";
 import { DEFAULT_USER_DISPLAY_NAME } from "@/config/layout";
 import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
 import type { ControlExport, ExportConfig } from "@/domain/controlExportTypes";
@@ -27,6 +29,7 @@ function getDefaultConfig(initialDriverId?: string | null): ExportConfig {
     dateTo: today,
     driverIds: initialDriverId ? [initialDriverId] : [],
     format: "xdt",
+    includedPartIds: [...ALL_EXPORT_PART_IDS],
   };
 }
 
@@ -45,6 +48,8 @@ export default function BetriebskontrollePage() {
         driverIds: prev.driverIds.includes(selectedEmployeeId)
           ? prev.driverIds
           : [selectedEmployeeId, ...prev.driverIds],
+        includedPartIds:
+          prev.includedPartIds?.length > 0 ? prev.includedPartIds : [...ALL_EXPORT_PART_IDS],
       }));
     } else {
       setConfig((prev) => ({ ...prev, driverIds: [] }));
@@ -93,7 +98,19 @@ export default function BetriebskontrollePage() {
       )}
       <div className="grid gap-4 p-4 md:grid-cols-2">
         <ExportConfigCard config={config} />
-        <ExportPartsCard parts={parts} />
+        <ExportPartsCard
+          parts={parts}
+          includedPartIds={config.includedPartIds ?? ALL_EXPORT_PART_IDS}
+          onTogglePart={(id: ExportPartType) => {
+            setConfig((prev) => {
+              const current = prev.includedPartIds ?? [...ALL_EXPORT_PART_IDS];
+              const next = current.includes(id)
+                ? current.filter((x) => x !== id)
+                : [...current, id];
+              return { ...prev, includedPartIds: next };
+            });
+          }}
+        />
       </div>
       <div className="px-4 pb-4">
         <DataSourceInfo className="mb-4" />

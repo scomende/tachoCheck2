@@ -4,6 +4,7 @@ import type { Driver } from "@/domain/drivingTypes";
 import type { ExportConfig, ExportFormat } from "@/domain/controlExportTypes";
 import { KOSTENSTELLE_OPTIONS } from "@/config/layout";
 import { cn } from "@/lib/utils";
+import { CheckboxMultiSelectDropdown } from "./CheckboxMultiSelectDropdown";
 
 type BetriebskontrolleFiltersProps = {
   config: ExportConfig;
@@ -25,20 +26,18 @@ export function BetriebskontrolleFilters({
   const update = (patch: Partial<ExportConfig>) =>
     onConfigChange({ ...config, ...patch });
 
-  const toggleDriver = (driverId: string) => {
-    const next = config.driverIds.includes(driverId)
-      ? config.driverIds.filter((id) => id !== driverId)
-      : [...config.driverIds, driverId];
-    update({ driverIds: next });
-  };
-
   const selectAllDrivers = () => update({ driverIds: drivers.map((d) => d.id) });
   const clearDrivers = () => update({ driverIds: [] });
+
+  const driverOptions = drivers.map((d) => ({
+    value: d.id,
+    label: d.personalNumber ? `${d.name} (${d.personalNumber})` : d.name,
+  }));
 
   return (
     <div
       className={cn(
-        "flex flex-wrap items-end gap-5 border-b border-border bg-muted/30 px-5 py-3",
+        "flex flex-wrap items-end gap-5 overflow-visible border-b border-border bg-muted/30 px-5 py-3",
         className
       )}
       role="form"
@@ -68,44 +67,32 @@ export function BetriebskontrolleFilters({
           className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
         />
       </div>
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">
-          Mitarbeiter:in (Mehrfachauswahl)
-        </label>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={selectAllDrivers}
-            className="h-8 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0 hover:bg-muted/50"
-          >
-            Alle
-          </button>
-          <button
-            type="button"
-            onClick={clearDrivers}
-            className="h-8 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0 hover:bg-muted/50"
-          >
-            Keine
-          </button>
-          {drivers.map((d) => (
-            <label
-              key={d.id}
-              className={cn(
-                "flex cursor-pointer items-center gap-1.5 rounded border px-2.5 py-1.5 text-xs focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-0",
-                config.driverIds.includes(d.id)
-                  ? "border-primary bg-primary/10 text-foreground"
-                  : "border-border bg-background text-muted-foreground hover:bg-muted/30"
-              )}
+      <div className="flex min-w-0 flex-col gap-1.5 overflow-visible">
+        <div className="flex flex-wrap items-end gap-2 overflow-visible">
+          <CheckboxMultiSelectDropdown
+            fieldLabel="Mitarbeiter:in (Mehrfachauswahl)"
+            placeholder="Mitarbeitende auswählen…"
+            options={driverOptions}
+            selectedValues={config.driverIds}
+            onSelectionChange={(driverIds) => update({ driverIds })}
+            className="min-w-[16rem] max-w-[min(100%,22rem)] flex-1"
+          />
+          <div className="flex gap-1 pb-0.5">
+            <button
+              type="button"
+              onClick={selectAllDrivers}
+              className="h-9 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0 hover:bg-muted/50"
             >
-              <input
-                type="checkbox"
-                checked={config.driverIds.includes(d.id)}
-                onChange={() => toggleDriver(d.id)}
-                className="sr-only"
-              />
-              {d.name}
-            </label>
-          ))}
+              Alle
+            </button>
+            <button
+              type="button"
+              onClick={clearDrivers}
+              className="h-9 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0 hover:bg-muted/50"
+            >
+              Keine
+            </button>
+          </div>
         </div>
       </div>
       <div className="flex flex-col gap-1.5">
@@ -145,7 +132,11 @@ export function BetriebskontrolleFilters({
         <button
           type="button"
           onClick={onGenerate}
-          disabled={isGenerating || config.driverIds.length === 0}
+          disabled={
+            isGenerating ||
+            config.driverIds.length === 0 ||
+            (config.includedPartIds?.length ?? 0) === 0
+          }
           className="h-9 rounded border border-primary bg-primary px-4 text-sm font-medium text-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0 hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
         >
           {isGenerating ? "Wird erstellt…" : "Exportpaket generieren"}
