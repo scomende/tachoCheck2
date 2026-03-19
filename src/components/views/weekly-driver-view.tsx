@@ -29,6 +29,9 @@ import { cn } from "@/lib/utils";
 const DRIVER_ID_PARAM = "driverId";
 const HIGHLIGHT_DATE_PARAM = "date";
 
+/** Reihenfolge für Legende und Tätigkeitsart-Dropdown in der Detailtabelle. */
+const SEGMENT_TYPE_OPTIONS: SegmentType[] = ["driving", "break", "work", "availability", "other"];
+
 /** Montag (YYYY-MM-DD) der Woche, in der das gegebene Datum liegt. */
 function getWeekStart(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
@@ -302,7 +305,7 @@ export const WeeklyDriverView = () => {
 
       <div className="flex min-w-0 flex-1 flex-col gap-6 p-6 overflow-auto">
       {/* Auswahl Woche + Switch Details einblenden */}
-      <div className="flex flex-wrap items-end gap-6">
+      <div className="flex w-full flex-wrap items-end gap-6">
         <div className="flex flex-col gap-1.5">
           <label
             htmlFor="weekly-week-select"
@@ -345,17 +348,42 @@ export const WeeklyDriverView = () => {
           </span>
           <span className="text-sm text-foreground">Details einblenden</span>
         </label>
-        {Object.keys(editedDaySegments).length > 0 && (
-          <div className="ml-auto self-end pb-1">
+        <div className="ml-auto flex max-w-full flex-wrap items-end justify-end gap-x-4 gap-y-2 self-end pb-0.5">
+          {Object.keys(editedDaySegments).length > 0 && (
             <button
               type="button"
               onClick={() => setEditedDaySegments({})}
-              className="cursor-pointer rounded border border-[#e6c022] bg-[#F7D526] px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-[#e6c022] active:bg-[#d4be20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="shrink-0 cursor-pointer rounded border border-[#e6c022] bg-[#F7D526] px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-[#e6c022] active:bg-[#d4be20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               Speichern und übermitteln
             </button>
+          )}
+          <div
+            className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1"
+            role="list"
+            aria-label="Tätigkeitsarten: Farbe und Name"
+          >
+            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">
+              Legende
+            </span>
+            {SEGMENT_TYPE_OPTIONS.filter((type) => type !== "other").map((type) => (
+              <div
+                key={type}
+                role="listitem"
+                className="flex items-center gap-1.5 text-xs text-foreground"
+              >
+                <span
+                  className={cn(
+                    "size-3 shrink-0 rounded-sm ring-1 ring-border/50",
+                    SEGMENT_COLORS_MUTED[type]
+                  )}
+                  aria-hidden
+                />
+                <span>{SEGMENT_LABELS[type]}</span>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Zeitachse 00:00–24:00 (nutzt verfügbare Breite, kein horizontaler Scroll) */}
@@ -642,8 +670,6 @@ const Tooltip = ({ segment, left, top, onClose }: TooltipProps) => {
     </div>
   );
 };
-
-const SEGMENT_TYPE_OPTIONS: SegmentType[] = ["driving", "break", "work", "availability", "other"];
 
 type VehicleOption = { id: string; licensePlate: string; vehicleNumber: string };
 
