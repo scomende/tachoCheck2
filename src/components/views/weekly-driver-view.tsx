@@ -81,7 +81,6 @@ export const WeeklyDriverView = () => {
   }, [selectedEmployeeId, urlDriverId, filteredDrivers]);
 
   const [selectedWeekStart, setSelectedWeekStart] = useState<string>("");
-  const [highlightedDate, setHighlightedDate] = useState<string | null>(null);
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandAllDays, setExpandAllDays] = useState(false);
   const [editedDaySegments, setEditedDaySegments] = useState<Record<string, DrivingSegment[]>>({});
@@ -126,14 +125,13 @@ export const WeeklyDriverView = () => {
     const weekStart = getWeekStart(urlHighlightDate);
     if (availableWeeks.includes(weekStart)) {
       setSelectedWeekStart(weekStart);
-      setHighlightedDate(urlHighlightDate);
+      setYellowHighlightDate(urlHighlightDate);
     }
   }, [urlHighlightDate, selectedDriverId, availableWeeks]);
 
   const handleDriverSelect = useCallback(
     (id: string) => {
       if (!id) return;
-      setHighlightedDate(null);
       setExpandedDate(null);
       setYellowHighlightDate(null);
       setEditedDaySegments({});
@@ -150,7 +148,6 @@ export const WeeklyDriverView = () => {
 
   const handleWeekChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedWeekStart(e.target.value);
-    setHighlightedDate(null);
     setExpandedDate(null);
     setYellowHighlightDate(null);
     setEditedDaySegments({});
@@ -164,8 +161,18 @@ export const WeeklyDriverView = () => {
     [selectedDriverId, currentWeekStart]
   );
 
+  /** Gleiche gelbe Auswahl wie Tageszeile; klappt den Tag auf (sofern nicht „Details einblenden“). */
   const handleArvViolationSelectDate = (date: string) => {
-    setHighlightedDate((prev) => (prev === date ? null : date));
+    const turningOff = yellowHighlightDate === date;
+    const nextYellow = turningOff ? null : date;
+    setYellowHighlightDate(nextYellow);
+    if (!expandAllDays) {
+      if (turningOff) {
+        setExpandedDate((e) => (e === date ? null : e));
+      } else {
+        setExpandedDate(date);
+      }
+    }
   };
 
   if (drivers.length === 0) {
@@ -378,7 +385,6 @@ export const WeeklyDriverView = () => {
               <div key={day.date}>
                 <DayRow
                   day={day}
-                  isHighlighted={day.date === highlightedDate}
                   isExpanded={isExpanded}
                   isCreamHighlight={isCreamHighlight}
                   hoveredSegmentIndex={hoveredTableSegment?.date === day.date ? hoveredTableSegment.segmentIndex : null}
@@ -419,7 +425,7 @@ export const WeeklyDriverView = () => {
 
       <ArvViolationsPanel
         violations={violationsForWeek}
-        highlightedDate={highlightedDate}
+        highlightedDate={yellowHighlightDate}
         onSelectDate={handleArvViolationSelectDate}
         driverId={selectedDriverId || undefined}
       />
@@ -442,9 +448,8 @@ const SELECTED_DAY_BG_HOVER = "hover:bg-[#FFF2CC]";
 
 type DayRowProps = {
   day: DrivingDay;
-  isHighlighted?: boolean;
   isExpanded?: boolean;
-  /** Gelber Hintergrund (#FFF8E6) nur wenn diese Zeile per Klick gewählt ist. */
+  /** Gelber Hintergrund (#FFF8E6) nur wenn diese Zeile per Klick gewählt ist (sync mit „Verstösse dieser Woche“). */
   isCreamHighlight?: boolean;
   hoveredSegmentIndex?: number | null;
   dayViolations?: ArvViolation[];
@@ -453,7 +458,7 @@ type DayRowProps = {
   onSegmentLeave?: () => void;
 };
 
-const DayRow = ({ day, isHighlighted = false, isExpanded = false, isCreamHighlight = false, hoveredSegmentIndex = null, dayViolations = [], onDayClick, onSegmentEnter, onSegmentLeave }: DayRowProps) => {
+const DayRow = ({ day, isExpanded = false, isCreamHighlight = false, hoveredSegmentIndex = null, dayViolations = [], onDayClick, onSegmentEnter, onSegmentLeave }: DayRowProps) => {
   const [tooltip, setTooltip] = useState<{
     seg: DrivingSegment;
     left: number;
@@ -505,7 +510,6 @@ const DayRow = ({ day, isHighlighted = false, isExpanded = false, isCreamHighlig
       className={cn(
         "flex min-h-10 cursor-pointer items-stretch border-b border-border py-2 transition-colors last:border-b-0",
         !isCreamHighlight && "hover:bg-muted/30",
-        isHighlighted && "bg-primary/5 border-l-4 border-l-primary",
         isCreamHighlight && cn(SELECTED_DAY_BG, SELECTED_DAY_BG_HOVER)
       )}
     >

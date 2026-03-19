@@ -6,6 +6,11 @@ import type { ArvViolation, ArvViolationSeverity } from "@/domain/drivingTypes";
 import { formatDayLabelLong } from "@/lib/drivingUtils";
 import { cn } from "@/lib/utils";
 
+/** Gleiche Farbe wie selektierte Tageszeile in der Wochenansicht (#FFF8E6). */
+const SELECTED_VIOLATION_BG = "bg-[#FFF8E6]";
+const SELECTED_VIOLATION_BG_HOVER = "hover:bg-[#FFF2CC]";
+const SELECTED_VIOLATION_BORDER = "border-[#e6c022]/70";
+
 type ArvViolationsPanelProps = {
   violations: ArvViolation[];
   highlightedDate: string | null;
@@ -66,7 +71,7 @@ export const ArvViolationsPanel = ({
                     className={cn(
                       "flex flex-col gap-0.5 rounded border px-3 py-2.5 text-sm transition-colors",
                       isHighlighted
-                        ? "border-primary bg-primary/10"
+                        ? cn(SELECTED_VIOLATION_BORDER, SELECTED_VIOLATION_BG, SELECTED_VIOLATION_BG_HOVER)
                         : "border-border bg-background"
                     )}
                   >
