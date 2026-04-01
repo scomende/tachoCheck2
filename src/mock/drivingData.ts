@@ -32,15 +32,17 @@ const addDays = (dateStr: string, days: number): string => {
   return d.toISOString().slice(0, 10);
 };
 
-/** Ein typischer Arbeitstag mit Fahrt- und Pausensegmenten. */
-const daySegments = (baseDate: string): DrivingSegment[] => [
-  { start: "06:00", end: "09:30", type: "driving", vehicleId: "V-101", dataSource: "digital" },
+/** Ein typischer Arbeitstag mit Fahrt- und Pausensegmenten (Fahrzeug-ID wie in `vehicles.ts`). */
+const daySegmentsWithVehicle = (vehicleId: string): DrivingSegment[] => [
+  { start: "06:00", end: "09:30", type: "driving", vehicleId, dataSource: "digital" },
   { start: "09:30", end: "09:45", type: "break", dataSource: "digital" },
-  { start: "09:45", end: "12:00", type: "driving", vehicleId: "V-101", dataSource: "digital" },
+  { start: "09:45", end: "12:00", type: "driving", vehicleId, dataSource: "digital" },
   { start: "12:00", end: "12:45", type: "break", dataSource: "digital" },
   { start: "12:45", end: "15:00", type: "work", dataSource: "manual" },
-  { start: "15:00", end: "17:30", type: "driving", vehicleId: "V-101", dataSource: "digital" },
+  { start: "15:00", end: "17:30", type: "driving", vehicleId, dataSource: "digital" },
 ];
+
+const daySegments = (_baseDate: string): DrivingSegment[] => daySegmentsWithVehicle("V-101");
 
 /** Tag mit Bereitschaftszeit (Gelb) für US-01-Demo. */
 const dayWithAvailability: DrivingSegment[] = [
@@ -64,13 +66,17 @@ const buildWeekForDriver = (
   driverId: string,
   weekStart: string,
   useShortDays?: (dayIndex: number) => boolean,
-  useAvailabilityDay?: (dayIndex: number) => boolean
+  useAvailabilityDay?: (dayIndex: number) => boolean,
+  /** Optional: eigene Segmente für einen Wochentag (Index 0 = Mo). */
+  segmentOverrideForDayIndex?: (dayIndex: number) => DrivingSegment[] | undefined
 ): DriverWeek => {
   const days: DrivingDay[] = [];
   for (let i = 0; i < 7; i++) {
     const date = addDays(weekStart, i);
     let segments: DrivingSegment[];
-    if (useAvailabilityDay?.(i)) segments = dayWithAvailability;
+    const overridden = segmentOverrideForDayIndex?.(i);
+    if (overridden) segments = overridden;
+    else if (useAvailabilityDay?.(i)) segments = dayWithAvailability;
     else if (useShortDays?.(i)) segments = shortDaySegments;
     else segments = daySegments(date);
     days.push({ date, segments });
@@ -79,7 +85,10 @@ const buildWeekForDriver = (
 };
 
 export const MOCK_DRIVER_WEEKS: DriverWeek[] = [
-  buildWeekForDriver("d1", WEEK_START),
+  /** d1: Mi 21.5. (Index 2) = nicht-Coop BE 345 678 (`v-3`), sonst Coop ZH 400 101 (`V-101`). */
+  buildWeekForDriver("d1", WEEK_START, undefined, undefined, (i) =>
+    i === 2 ? daySegmentsWithVehicle("v-3") : undefined
+  ),
   buildWeekForDriver("d2", WEEK_START, (i) => i === 2 || i === 5, (i) => i === 3),
   buildWeekForDriver("d3", WEEK_START),
 ];

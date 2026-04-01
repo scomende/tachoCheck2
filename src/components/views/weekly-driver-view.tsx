@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { AlertTriangle, AlertCircle, Info } from "lucide-react";
 import type { DrivingDay, DrivingSegment, ArvViolationSeverity, ArvViolation, SegmentType } from "@/domain/drivingTypes";
 import { getMockDrivingData, getArvViolationsForWeek } from "@/mock/drivingData";
-import { getVehicleById, getVehiclesList } from "@/mock/vehicles";
+import { getVehicleById } from "@/mock/vehicles";
 import { filterDriversBySearch } from "@/lib/driverSearch";
 import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
 import { ArvViolationsPanel } from "@/components/views/arv-violations-panel";
@@ -59,6 +59,22 @@ function highestSeverity(severities: (ArvViolationSeverity | undefined)[]): ArvV
 }
 
 /**
+ * Tag ausgrauen: Es gibt Lenksegmente mit Fahrzeug, aber keines ist Coop-Fahrzeug.
+ * Nur Arbeit/Ruhe ohne zugeordnetes Lenkfahrzeug → false.
+ */
+function dayHasNoCoopDriving(
+  segments: DrivingSegment[],
+  getVehicleById: (id: string) => { isCoopVehicle?: boolean } | undefined
+): boolean {
+  const drivingWithVehicle = segments.filter(
+    (s): s is DrivingSegment & { vehicleId: string } =>
+      s.type === "driving" && Boolean(s.vehicleId)
+  );
+  if (drivingWithVehicle.length === 0) return false;
+  return !drivingWithVehicle.some((s) => getVehicleById(s.vehicleId)?.isCoopVehicle === true);
+}
+
+/**
  * US-01: Wochenansicht Fahrerkartendaten.
  * Globale Mitarbeiter:innen-Auswahl (SelectedEmployeeContext): vorausgewählt in der Liste.
  * Bei lokaler Änderung wird die globale Auswahl aktualisiert. URL driverId für Deep-Links.
@@ -87,6 +103,8 @@ export const WeeklyDriverView = () => {
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandAllDays, setExpandAllDays] = useState(false);
   const [editedDaySegments, setEditedDaySegments] = useState<Record<string, DrivingSegment[]>>({});
+  /** Nicht-Coop-Tage: pro Datum Opt-in „ausnahmsweise übermitteln“ (nur UI-State, kein Backend). */
+  const [nonCoopSubmitExceptions, setNonCoopSubmitExceptions] = useState<Record<string, boolean>>({});
   const [hoveredTableSegment, setHoveredTableSegment] = useState<{ date: string; segmentIndex: number } | null>(null);
   /** Gelber Hintergrund (#FFF8E6) nur für per Klick gewählte Zeile; bei „Details einblenden“ aus bis zur nächsten Klickwahl. */
   const [yellowHighlightDate, setYellowHighlightDate] = useState<string | null>(null);
@@ -138,6 +156,7 @@ export const WeeklyDriverView = () => {
       setExpandedDate(null);
       setYellowHighlightDate(null);
       setEditedDaySegments({});
+      setNonCoopSubmitExceptions({});
       const driver = filteredDrivers.find((d) => d.id === id);
       setSelectedEmployee(id, driver ?? undefined);
       const next = new URLSearchParams(searchParams.toString());
@@ -154,6 +173,7 @@ export const WeeklyDriverView = () => {
     setExpandedDate(null);
     setYellowHighlightDate(null);
     setEditedDaySegments({});
+    setNonCoopSubmitExceptions({});
   };
 
   const violationsForWeek = useMemo(
@@ -409,12 +429,15 @@ export const WeeklyDriverView = () => {
           {days.map((day) => {
             const isExpanded = expandAllDays || day.date === expandedDate;
             const isCreamHighlight = yellowHighlightDate === day.date;
+            const segmentsForCoopCheck = editedDaySegments[day.date] ?? day.segments;
+            const isNonCoopVehicleDay = dayHasNoCoopDriving(segmentsForCoopCheck, getVehicleById);
             return (
               <div key={day.date}>
                 <DayRow
                   day={day}
                   isExpanded={isExpanded}
                   isCreamHighlight={isCreamHighlight}
+                  isNonCoopVehicleDay={isNonCoopVehicleDay}
                   hoveredSegmentIndex={hoveredTableSegment?.date === day.date ? hoveredTableSegment.segmentIndex : null}
                   dayViolations={violationsForWeek.filter((v) => v.date === day.date)}
                   onDayClick={() => {
@@ -440,8 +463,12 @@ export const WeeklyDriverView = () => {
                     onSegmentLeave={() => setHoveredTableSegment(null)}
                     highlightedSegmentIndex={hoveredTableSegment?.date === day.date ? hoveredTableSegment.segmentIndex : null}
                     getVehicleById={getVehicleById}
-                    vehicles={getVehiclesList()}
                     isSelectedDay={isCreamHighlight}
+                    isNonCoopVehicleDay={isNonCoopVehicleDay}
+                    nonCoopSubmitException={nonCoopSubmitExceptions[day.date] ?? false}
+                    onNonCoopSubmitExceptionChange={(checked) =>
+                      setNonCoopSubmitExceptions((prev) => ({ ...prev, [day.date]: checked }))
+                    }
                   />
                 )}
               </div>
@@ -462,9 +489,35 @@ export const WeeklyDriverView = () => {
 };
 
 const DATA_SOURCE_LABEL: Record<"digital" | "manual", string> = {
-  digital: "Digital",
-  manual: "Manuell vom Fahrer:in",
+  digital: "Fahrerkarte automatisch",
+  manual: "Fahrerkarte manuell",
 };
+
+function segmentTypeDirty(cur: DrivingSegment, orig: DrivingSegment): boolean {
+  return cur.type !== orig.type;
+}
+
+function segmentStartDirty(cur: DrivingSegment, orig: DrivingSegment): boolean {
+  return cur.start.slice(0, 5) !== orig.start.slice(0, 5);
+}
+
+function segmentEndDirty(cur: DrivingSegment, orig: DrivingSegment): boolean {
+  return getSegmentEndTimeString(cur).slice(0, 5) !== getSegmentEndTimeString(orig).slice(0, 5);
+}
+
+function segmentCommentDirty(cur: DrivingSegment, orig: DrivingSegment): boolean {
+  return (cur.comment ?? "") !== (orig.comment ?? "");
+}
+
+function isSegmentRowDirty(cur: DrivingSegment, orig: DrivingSegment | undefined): boolean {
+  if (!orig) return false;
+  return (
+    segmentTypeDirty(cur, orig) ||
+    segmentStartDirty(cur, orig) ||
+    segmentEndDirty(cur, orig) ||
+    segmentCommentDirty(cur, orig)
+  );
+}
 
 /** Schmale Spalten für Start/Ende/Dauer (HH:mm); links wie die Tageszeile (w-24) eingerückt. */
 const DETAIL_TABLE_INDENT = "pl-24";
@@ -473,12 +526,17 @@ const TIME_COL = "w-[4.25rem] min-w-[4.25rem] max-w-[4.5rem] whitespace-nowrap p
 /** Ausgewählte Datums-Zeile + zugehörige Detailtabelle (nur wenn aufgeklappt). */
 const SELECTED_DAY_BG = "bg-[#FFF8E6]";
 const SELECTED_DAY_BG_HOVER = "hover:bg-[#FFF2CC]";
+/** Auswahl + kein Coop-Fahrzeug: etwas matteres Gelb. */
+const SELECTED_NON_COOP_DAY_BG = "bg-[#e8e4da]";
+const SELECTED_NON_COOP_DAY_BG_HOVER = "hover:bg-[#e2ddd2]";
 
 type DayRowProps = {
   day: DrivingDay;
   isExpanded?: boolean;
   /** Gelber Hintergrund (#FFF8E6) nur wenn diese Zeile per Klick gewählt ist (sync mit „Verstösse dieser Woche“). */
   isCreamHighlight?: boolean;
+  /** Kein Coop-Fahrzeug an diesem Tag (Lenksegmente nur Nicht-Coop): Zeile ausgegraut. */
+  isNonCoopVehicleDay?: boolean;
   hoveredSegmentIndex?: number | null;
   dayViolations?: ArvViolation[];
   onDayClick: () => void;
@@ -486,7 +544,17 @@ type DayRowProps = {
   onSegmentLeave?: () => void;
 };
 
-const DayRow = ({ day, isExpanded = false, isCreamHighlight = false, hoveredSegmentIndex = null, dayViolations = [], onDayClick, onSegmentEnter, onSegmentLeave }: DayRowProps) => {
+const DayRow = ({
+  day,
+  isExpanded = false,
+  isCreamHighlight = false,
+  isNonCoopVehicleDay = false,
+  hoveredSegmentIndex = null,
+  dayViolations = [],
+  onDayClick,
+  onSegmentEnter,
+  onSegmentLeave,
+}: DayRowProps) => {
   const [tooltip, setTooltip] = useState<{
     seg: DrivingSegment;
     left: number;
@@ -527,22 +595,37 @@ const DayRow = ({ day, isExpanded = false, isCreamHighlight = false, hoveredSegm
     }
   };
 
+  const dayRowLabel = [
+    dayLabel,
+    isExpanded ? "Details ausblenden" : "Details anzeigen",
+    isNonCoopVehicleDay ? "Kein Coop-Fahrzeug" : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   return (
     <div
       role="button"
       tabIndex={0}
       aria-expanded={isExpanded}
-      aria-label={`${dayLabel}, ${isExpanded ? "Details ausblenden" : "Details anzeigen"}`}
+      aria-label={dayRowLabel}
+      title={isNonCoopVehicleDay ? "An diesem Tag wurde kein Coop-Fahrzeug gefahren" : undefined}
       onClick={onDayClick}
       onKeyDown={handleKeyDown}
       className={cn(
         "flex min-h-10 cursor-pointer items-stretch border-b border-border py-2 transition-colors last:border-b-0",
-        !isCreamHighlight && "hover:bg-muted/30",
-        isCreamHighlight && cn(SELECTED_DAY_BG, SELECTED_DAY_BG_HOVER)
+        isNonCoopVehicleDay && "opacity-[0.88] saturate-[0.48] contrast-[0.97]",
+        !isCreamHighlight && !isNonCoopVehicleDay && "hover:bg-muted/30",
+        isCreamHighlight && !isNonCoopVehicleDay && cn(SELECTED_DAY_BG, SELECTED_DAY_BG_HOVER),
+        isCreamHighlight && isNonCoopVehicleDay && cn(SELECTED_NON_COOP_DAY_BG, SELECTED_NON_COOP_DAY_BG_HOVER),
+        !isCreamHighlight && isNonCoopVehicleDay && "bg-muted/40 hover:bg-muted/50"
       )}
     >
       <div
-        className="flex w-24 min-w-24 shrink-0 items-center gap-1.5 text-sm text-foreground whitespace-nowrap"
+        className={cn(
+          "flex w-24 min-w-24 shrink-0 items-center gap-1.5 text-sm whitespace-nowrap",
+          isNonCoopVehicleDay ? "text-muted-foreground" : "text-foreground"
+        )}
         aria-hidden
       >
         {dayLabel}
@@ -671,8 +754,6 @@ const Tooltip = ({ segment, left, top, onClose }: TooltipProps) => {
   );
 };
 
-type VehicleOption = { id: string; licensePlate: string; vehicleNumber: string };
-
 type DayDetailTableProps = {
   day: DrivingDay;
   segments: DrivingSegment[];
@@ -681,22 +762,45 @@ type DayDetailTableProps = {
   onSegmentLeave?: () => void;
   highlightedSegmentIndex?: number | null;
   getVehicleById: (id: string) => { licensePlate: string; vehicleNumber: string } | undefined;
-  vehicles: VehicleOption[];
   /** Gleiche Hintergrundfarbe wie die aufgeklappte Datums-Zeile (#FFF8E6). */
   isSelectedDay?: boolean;
+  /** Gleiche Logik wie Tageszeile: kein Coop-Fahrzeug → ausgegraut. */
+  isNonCoopVehicleDay?: boolean;
+  /** Opt-in: Tageszeiten trotzdem zur Übermittlung vorsehen (nur bei Nicht-Coop-Tag). */
+  nonCoopSubmitException?: boolean;
+  onNonCoopSubmitExceptionChange?: (checked: boolean) => void;
 };
 
-const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave, highlightedSegmentIndex = null, getVehicleById, vehicles, isSelectedDay = false }: DayDetailTableProps) => {
+const NON_COOP_SUBMIT_HINT_ID = "non-coop-submit-hint";
+
+const DayDetailTable = ({
+  day,
+  segments,
+  onSave,
+  onSegmentEnter,
+  onSegmentLeave,
+  highlightedSegmentIndex = null,
+  getVehicleById,
+  isSelectedDay = false,
+  isNonCoopVehicleDay = false,
+  nonCoopSubmitException = false,
+  onNonCoopSubmitExceptionChange,
+}: DayDetailTableProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [draftSegments, setDraftSegments] = useState<DrivingSegment[]>([]);
+  /** Snapshot beim Öffnen des Edit-Modus – für „Original:“-Vergleich und Zeilenmarkierung. */
+  const [baselineSegments, setBaselineSegments] = useState<DrivingSegment[]>([]);
 
   const startEditing = () => {
-    setDraftSegments(segments.map((s) => ({ ...s })));
+    const snap = segments.map((s) => ({ ...s }));
+    setBaselineSegments(snap);
+    setDraftSegments(snap.map((s) => ({ ...s })));
     setIsEditing(true);
   };
 
   const finishEditing = () => {
     onSave(day.date, draftSegments);
+    setBaselineSegments([]);
     setIsEditing(false);
   };
 
@@ -712,7 +816,11 @@ const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave,
         className={cn(
           "border-b border-border py-3 pr-4 text-sm text-muted-foreground",
           DETAIL_TABLE_INDENT,
-          isSelectedDay ? SELECTED_DAY_BG : "bg-muted/10"
+          isNonCoopVehicleDay && "opacity-90 saturate-[0.48]",
+          isSelectedDay && !isNonCoopVehicleDay && SELECTED_DAY_BG,
+          isSelectedDay && isNonCoopVehicleDay && SELECTED_NON_COOP_DAY_BG,
+          !isSelectedDay && !isNonCoopVehicleDay && "bg-muted/10",
+          !isSelectedDay && isNonCoopVehicleDay && "bg-muted/35"
         )}
       >
         Keine Segmentdaten für diesen Tag.
@@ -722,14 +830,55 @@ const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave,
 
   const displaySegments = isEditing ? draftSegments : segments;
 
+  const nonCoopSubmitHintId = `${NON_COOP_SUBMIT_HINT_ID}-${day.date}`;
+
   return (
-    <div className={cn("border-b border-border", isSelectedDay ? SELECTED_DAY_BG : "bg-muted/10")}>
+    <div
+      className={cn(
+        "border-b border-border",
+        isNonCoopVehicleDay && "opacity-[0.9] saturate-[0.48]",
+        isSelectedDay && !isNonCoopVehicleDay && SELECTED_DAY_BG,
+        isSelectedDay && isNonCoopVehicleDay && SELECTED_NON_COOP_DAY_BG,
+        !isSelectedDay && !isNonCoopVehicleDay && "bg-muted/10",
+        !isSelectedDay && isNonCoopVehicleDay && "bg-muted/35"
+      )}
+    >
+      {isNonCoopVehicleDay && onNonCoopSubmitExceptionChange && (
+        <div className={cn("border-b border-border/70 px-4 py-3", DETAIL_TABLE_INDENT)}>
+          <div className="rounded-md border border-border bg-background/90 px-3 py-2.5 shadow-sm">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={nonCoopSubmitException}
+                onChange={(e) => onNonCoopSubmitExceptionChange(e.target.checked)}
+                aria-describedby={nonCoopSubmitHintId}
+                className="mt-1 size-4 shrink-0 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium text-foreground">
+                  Die Zeiten werden ausnahmsweise übermittelt
+                </span>
+                <span
+                  id={nonCoopSubmitHintId}
+                  className="mt-1 block text-xs leading-snug text-muted-foreground"
+                >
+                  Tage ohne Coop-Fahrzeug werden standardmässig nicht übermittelt. Setzen Sie diese Option, wenn die
+                  Zeiten dieses Tags dennoch übermittelt werden sollen.
+                </span>
+              </span>
+            </label>
+          </div>
+        </div>
+      )}
       <div className={cn("overflow-x-auto py-3 pr-4", DETAIL_TABLE_INDENT)}>
         <table className="w-full min-w-[32rem] border-collapse text-left text-sm">
           <thead
             className={cn(
               "sticky top-0 z-10 border-b border-border",
-              isSelectedDay ? SELECTED_DAY_BG : "bg-muted/50"
+              isSelectedDay && !isNonCoopVehicleDay && SELECTED_DAY_BG,
+              isSelectedDay && isNonCoopVehicleDay && SELECTED_NON_COOP_DAY_BG,
+              !isSelectedDay && !isNonCoopVehicleDay && "bg-muted/50",
+              !isSelectedDay && isNonCoopVehicleDay && "bg-muted/40"
             )}
           >
             <tr>
@@ -771,95 +920,190 @@ const DayDetailTable = ({ day, segments, onSave, onSegmentEnter, onSegmentLeave,
                 : "–";
               const dataSourceLabel =
                 seg.dataSource != null ? DATA_SOURCE_LABEL[seg.dataSource] : "–";
+              /** Ansicht: Mock-Original (`day.segments`); Edit: Snapshot beim Öffnen des Edit-Modus. */
+              const compareBase = isEditing ? (baselineSegments[i] ?? seg) : (day.segments[i] ?? seg);
+              const rowDirty = isSegmentRowDirty(seg, compareBase);
               return (
                 <tr
                   key={`${day.date}-${i}`}
                   className={cn(
                     "border-b border-border/60 last:border-b-0",
-                    highlightedSegmentIndex === i && "bg-muted/40"
+                    rowDirty && "bg-amber-50/55 dark:bg-amber-950/30",
+                    highlightedSegmentIndex === i && !rowDirty && "bg-muted/40"
                   )}
                   onMouseEnter={() => onSegmentEnter?.(day.date, i)}
                   onMouseLeave={() => onSegmentLeave?.()}
                 >
                   {!isEditing ? (
                     <>
-                      <td className="py-2 pr-4 text-foreground">{SEGMENT_LABELS[seg.type]}</td>
-                      <td className={cn("py-2 text-foreground", TIME_COL)}>{seg.start.slice(0, 5)}</td>
-                      <td className={cn("py-2 text-foreground", TIME_COL)}>{getSegmentEndTimeString(seg)}</td>
+                      <td className="align-top py-2 pr-4">
+                        <div className="flex flex-col gap-0.5">
+                          <span
+                            className={cn(
+                              "text-foreground",
+                              segmentTypeDirty(seg, compareBase) && "font-bold"
+                            )}
+                          >
+                            {SEGMENT_LABELS[seg.type]}
+                          </span>
+                          {segmentTypeDirty(seg, compareBase) && (
+                            <span className="text-[10px] leading-tight text-muted-foreground">
+                              {SEGMENT_LABELS[compareBase.type]}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className={cn("align-top py-2", TIME_COL)}>
+                        <div className="flex flex-col gap-0.5">
+                          <span
+                            className={cn(
+                              "text-foreground",
+                              segmentStartDirty(seg, compareBase) && "font-bold"
+                            )}
+                          >
+                            {seg.start.slice(0, 5)}
+                          </span>
+                          {segmentStartDirty(seg, compareBase) && (
+                            <span className="text-[10px] leading-tight text-muted-foreground">
+                              {compareBase.start.slice(0, 5)}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className={cn("align-top py-2", TIME_COL)}>
+                        <div className="flex flex-col gap-0.5">
+                          <span
+                            className={cn(
+                              "text-foreground",
+                              segmentEndDirty(seg, compareBase) && "font-bold"
+                            )}
+                          >
+                            {getSegmentEndTimeString(seg)}
+                          </span>
+                          {segmentEndDirty(seg, compareBase) && (
+                            <span className="text-[10px] leading-tight text-muted-foreground">
+                              {getSegmentEndTimeString(compareBase).slice(0, 5)}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className={cn("py-2 text-foreground", TIME_COL)}>
                         {formatDurationHHMM(getSegmentDurationMinutes(seg))}
                       </td>
                       <td className="py-2 pr-4 text-foreground">{vehicleLabel}</td>
                       <td className="py-2 pr-4 text-foreground">{dataSourceLabel}</td>
-                      <td className="py-2 text-foreground">{seg.comment ?? "–"}</td>
+                      <td className="align-top py-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span
+                            className={cn(
+                              "text-foreground",
+                              segmentCommentDirty(seg, compareBase) && "font-bold"
+                            )}
+                          >
+                            {seg.comment ?? "–"}
+                          </span>
+                          {segmentCommentDirty(seg, compareBase) && (
+                            <span
+                              className="line-clamp-2 break-words text-[10px] leading-tight text-muted-foreground"
+                              title={compareBase.comment?.trim() ? compareBase.comment : undefined}
+                            >
+                              {compareBase.comment?.trim() ? compareBase.comment : "–"}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                     </>
                   ) : (
                     <>
-                      <td className="py-1 pr-4">
-                        <select
-                          value={seg.type}
-                          onChange={(e) => updateSegment(i, { type: e.target.value as SegmentType })}
-                          className="w-full min-w-[10rem] rounded border border-border bg-background px-2 py-1 text-foreground"
-                        >
-                          {SEGMENT_TYPE_OPTIONS.map((t) => (
-                            <option key={t} value={t}>
-                              {SEGMENT_LABELS[t]}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className={cn("py-1", TIME_COL)}>
-                        <input
-                          type="time"
-                          value={seg.start.slice(0, 5)}
-                          onChange={(e) => updateSegment(i, { start: e.target.value })}
-                          className="w-full min-w-0 max-w-[4.25rem] rounded border border-border bg-background px-1 py-1 text-foreground"
-                        />
-                      </td>
-                      <td className={cn("py-1", TIME_COL)}>
-                        <input
-                          type="time"
-                          value={getSegmentEndTimeString(seg).slice(0, 5)}
-                          onChange={(e) =>
-                            updateSegment(i, { end: e.target.value, duration: undefined })
-                          }
-                          className="w-full min-w-0 max-w-[4.25rem] rounded border border-border bg-background px-1 py-1 text-foreground"
-                        />
-                      </td>
-                      <td className={cn("py-1 text-foreground", TIME_COL)}>
-                        {formatDurationHHMM(getSegmentDurationMinutes(seg))}
-                      </td>
-                      <td className="py-1 pr-4">
-                        {seg.vehicleId ? (
-                          <span className="text-foreground">{vehicleLabel}</span>
-                        ) : (
+                      <td className="align-top py-1 pr-4">
+                        <div className="flex flex-col gap-0.5">
                           <select
-                            value={seg.vehicleId ?? ""}
-                            onChange={(e) =>
-                              updateSegment(i, { vehicleId: e.target.value || undefined })
-                            }
-                            className="w-full min-w-[10rem] rounded border border-border bg-background px-2 py-1 text-foreground"
+                            value={seg.type}
+                            onChange={(e) => updateSegment(i, { type: e.target.value as SegmentType })}
+                            className={cn(
+                              "w-full min-w-[10rem] rounded border border-border bg-background px-2 py-1 text-foreground",
+                              segmentTypeDirty(seg, compareBase) && "font-bold"
+                            )}
                           >
-                            <option value="">–</option>
-                            {vehicles.map((v) => (
-                              <option key={v.id} value={v.id}>
-                                {v.licensePlate}, Nr. {v.vehicleNumber}
+                            {SEGMENT_TYPE_OPTIONS.map((t) => (
+                              <option key={t} value={t}>
+                                {SEGMENT_LABELS[t]}
                               </option>
                             ))}
                           </select>
-                        )}
+                          {segmentTypeDirty(seg, compareBase) && (
+                            <span className="text-[10px] leading-tight text-muted-foreground">
+                              {SEGMENT_LABELS[compareBase.type]}
+                            </span>
+                          )}
+                        </div>
                       </td>
-                      <td className="py-1 pr-4 text-foreground">
+                      <td className={cn("align-top py-1", TIME_COL)}>
+                        <div className="flex flex-col gap-0.5">
+                          <input
+                            type="time"
+                            value={seg.start.slice(0, 5)}
+                            onChange={(e) => updateSegment(i, { start: e.target.value })}
+                            className={cn(
+                              "w-full min-w-0 max-w-[4.25rem] rounded border border-border bg-background px-1 py-1 text-foreground",
+                              segmentStartDirty(seg, compareBase) && "font-bold"
+                            )}
+                          />
+                          {segmentStartDirty(seg, compareBase) && (
+                            <span className="text-[10px] leading-tight text-muted-foreground">
+                              {compareBase.start.slice(0, 5)}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className={cn("align-top py-1", TIME_COL)}>
+                        <div className="flex flex-col gap-0.5">
+                          <input
+                            type="time"
+                            value={getSegmentEndTimeString(seg).slice(0, 5)}
+                            onChange={(e) =>
+                              updateSegment(i, { end: e.target.value, duration: undefined })
+                            }
+                            className={cn(
+                              "w-full min-w-0 max-w-[4.25rem] rounded border border-border bg-background px-1 py-1 text-foreground",
+                              segmentEndDirty(seg, compareBase) && "font-bold"
+                            )}
+                          />
+                          {segmentEndDirty(seg, compareBase) && (
+                            <span className="text-[10px] leading-tight text-muted-foreground">
+                              {getSegmentEndTimeString(compareBase).slice(0, 5)}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className={cn("align-top py-1 text-muted-foreground", TIME_COL)}>
+                        {formatDurationHHMM(getSegmentDurationMinutes(seg))}
+                      </td>
+                      <td className="align-top py-1 pr-4 text-muted-foreground">{vehicleLabel}</td>
+                      <td className="align-top py-1 pr-4 text-muted-foreground">
                         {seg.dataSource != null ? DATA_SOURCE_LABEL[seg.dataSource] : "–"}
                       </td>
-                      <td className="py-1">
-                        <input
-                          type="text"
-                          value={seg.comment ?? ""}
-                          onChange={(e) => updateSegment(i, { comment: e.target.value || undefined })}
-                          placeholder="Kommentar"
-                          className="w-full min-w-[8rem] rounded border border-border bg-background px-2 py-1 text-foreground placeholder:text-muted-foreground"
-                        />
+                      <td className="align-top py-1">
+                        <div className="flex flex-col gap-0.5">
+                          <input
+                            type="text"
+                            value={seg.comment ?? ""}
+                            onChange={(e) => updateSegment(i, { comment: e.target.value || undefined })}
+                            placeholder="Kommentar"
+                            className={cn(
+                              "w-full min-w-[8rem] rounded border border-border bg-background px-2 py-1 text-foreground placeholder:text-muted-foreground",
+                              segmentCommentDirty(seg, compareBase) && "font-bold"
+                            )}
+                          />
+                          {segmentCommentDirty(seg, compareBase) && (
+                            <span
+                              className="line-clamp-2 break-words text-[10px] leading-tight text-muted-foreground"
+                              title={compareBase.comment?.trim() ? compareBase.comment : undefined}
+                            >
+                              {compareBase.comment?.trim() ? compareBase.comment : "–"}
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </>
                   )}
