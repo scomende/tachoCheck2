@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { Info } from "lucide-react";
 import type { Vehicle } from "@/domain/vehicleTypes";
 import { updateVehicleDetailFields } from "@/mock/vehicles";
 import { formatValidityRange } from "@/lib/vehicleUi";
 import { MatchingHint } from "./MatchingHint";
+import { VehicleSymbolIcon, VEHICLE_SYMBOL_LABELS } from "./VehicleSymbolIcon";
 import { cn } from "@/lib/utils";
 
 const SOURCE_LABEL: Record<Vehicle["source"], string> = {
@@ -56,37 +56,40 @@ export function FahrzeugRowDetailContent({
 }: FahrzeugRowDetailContentProps) {
   const [editing, setEditing] = useState(false);
   const [employeeDraft, setEmployeeDraft] = useState("");
-  const [orgDraft, setOrgDraft] = useState({ mandant: "", costCenter: "" });
+  const [validityDraft, setValidityDraft] = useState({ validFrom: "", validUntil: "" });
 
   useEffect(() => {
     setEditing(false);
     setEmployeeDraft("");
-    setOrgDraft({ mandant: "", costCenter: "" });
+    setValidityDraft({ validFrom: "", validUntil: "" });
   }, [vehicle.id]);
 
   const startEdit = useCallback(() => {
     setEmployeeDraft(vehicle.assignedEmployee);
-    setOrgDraft({ mandant: vehicle.mandant, costCenter: vehicle.costCenter });
+    setValidityDraft({
+      validFrom: vehicle.validFrom,
+      validUntil: vehicle.validUntil,
+    });
     setEditing(true);
-  }, [vehicle.assignedEmployee, vehicle.mandant, vehicle.costCenter]);
+  }, [vehicle.assignedEmployee, vehicle.validFrom, vehicle.validUntil]);
 
   const cancelEdit = useCallback(() => {
     setEditing(false);
     setEmployeeDraft("");
-    setOrgDraft({ mandant: "", costCenter: "" });
+    setValidityDraft({ validFrom: "", validUntil: "" });
   }, []);
 
   const finishEdit = useCallback(() => {
     const updated = updateVehicleDetailFields(vehicle.id, {
       assignedEmployee: employeeDraft,
-      mandant: orgDraft.mandant,
-      costCenter: orgDraft.costCenter,
+      validFrom: validityDraft.validFrom,
+      validUntil: validityDraft.validUntil,
     });
     if (updated) {
       onUpdated(updated);
       setEditing(false);
     }
-  }, [vehicle.id, employeeDraft, orgDraft.mandant, orgDraft.costCenter, onUpdated]);
+  }, [vehicle.id, employeeDraft, validityDraft.validFrom, validityDraft.validUntil, onUpdated]);
 
   const pc = panelClass(contrastOnCream);
 
@@ -112,25 +115,6 @@ export function FahrzeugRowDetailContent({
           </div>
         )}
       </div>
-
-      {!vehicle.editable ? (
-        <div
-          className={cn(
-            "mb-4 flex gap-2 rounded-md border px-3 py-2.5 text-xs",
-            contrastOnCream
-              ? "border-border bg-white text-foreground shadow-sm dark:border-border dark:bg-card"
-              : "border-sky-200 bg-sky-50 text-sky-950 dark:border-sky-800 dark:bg-sky-950/25 dark:text-sky-100"
-          )}
-        >
-          <Info className="mt-0.5 size-3.5 shrink-0 opacity-80" aria-hidden />
-          <p className={contrastOnCream ? "text-muted-foreground" : "text-sky-900 dark:text-sky-100/90"}>
-            Weitere Stammdaten stammen aus dem Import.{" "}
-            <span className="font-medium text-foreground">Mitarbeiter:in</span> und{" "}
-            <span className="font-medium text-foreground">Organisation</span> können Sie über „Editieren“
-            anpassen.
-          </p>
-        </div>
-      ) : null}
 
       <div className="space-y-4">
         <section className={pc} aria-labelledby={`fv-emp-${vehicle.id}`}>
@@ -161,13 +145,20 @@ export function FahrzeugRowDetailContent({
 
         <section className={pc} aria-labelledby={`fv-grp-${vehicle.id}`}>
           <h4 id={`fv-grp-${vehicle.id}`} className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Fahrzeug &amp; Nummern
+            Fahrzeug
           </h4>
-          <p className="mb-3 text-sm text-foreground">
-            <span className="text-muted-foreground">Fahrzeuggruppe: </span>
-            {vehicle.vehicleGroup.trim() || "–"}
-          </p>
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <VehicleSymbolIcon type={vehicle.symbolType} className="text-foreground" />
+            <span className="text-sm text-muted-foreground">{VEHICLE_SYMBOL_LABELS[vehicle.symbolType]}</span>
+          </div>
           <dl className="grid gap-4 sm:grid-cols-2">
+            <DlItem label="Kennzeichen">{vehicle.licensePlate.trim() || "–"}</DlItem>
+            <DlItem label="Fahrzeugart">{vehicle.vehicleCategory.trim() || "–"}</DlItem>
+            <DlItem label="Fahrzeugtyp">{vehicle.vehicleModel.trim() || "–"}</DlItem>
+            <DlItem label="Fahrzeug-ID">
+              <span className="font-mono text-xs">{vehicle.wspVehicleId.trim() || "–"}</span>
+            </DlItem>
+            <DlItem label="Fahrzeuggruppe">{vehicle.vehicleGroup.trim() || "–"}</DlItem>
             <DlItem label="VIN / Chassisnummer">{vehicle.vin.trim() || "–"}</DlItem>
             <DlItem label="Interne Nummer">{vehicle.internalNumber.trim() || "–"}</DlItem>
             <DlItem label="Stammnummer">{vehicle.masterNumber.trim() || "–"}</DlItem>
@@ -177,52 +168,51 @@ export function FahrzeugRowDetailContent({
           </dl>
         </section>
 
-        <section className={pc} aria-labelledby={`fv-org-${vehicle.id}`}>
+        <section className={pc} aria-labelledby={`fv-val-${vehicle.id}`}>
           <h4
-            id={`fv-org-${vehicle.id}`}
+            id={`fv-val-${vehicle.id}`}
             className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
           >
-            Organisation
+            Gültigkeit
           </h4>
           {editing ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
-                <label htmlFor={`fv-mand-inp-${vehicle.id}`} className="text-xs font-medium text-muted-foreground">
-                  Mandant (Zuweisungsgruppe)
+                <label htmlFor={`fv-von-inp-${vehicle.id}`} className="text-xs font-medium text-muted-foreground">
+                  Gültig ab
                 </label>
                 <input
-                  id={`fv-mand-inp-${vehicle.id}`}
-                  type="text"
-                  value={orgDraft.mandant}
-                  onChange={(e) => setOrgDraft((d) => ({ ...d, mandant: e.target.value }))}
+                  id={`fv-von-inp-${vehicle.id}`}
+                  type="date"
+                  value={validityDraft.validFrom}
+                  onChange={(e) => setValidityDraft((d) => ({ ...d, validFrom: e.target.value }))}
                   className={detailInputClass}
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label htmlFor={`fv-kst-inp-${vehicle.id}`} className="text-xs font-medium text-muted-foreground">
-                  Kostenstelle
+                <label htmlFor={`fv-bis-inp-${vehicle.id}`} className="text-xs font-medium text-muted-foreground">
+                  Gültig bis (leer = unbefristet)
                 </label>
                 <input
-                  id={`fv-kst-inp-${vehicle.id}`}
-                  type="text"
-                  value={orgDraft.costCenter}
-                  onChange={(e) => setOrgDraft((d) => ({ ...d, costCenter: e.target.value }))}
+                  id={`fv-bis-inp-${vehicle.id}`}
+                  type="date"
+                  value={validityDraft.validUntil}
+                  onChange={(e) => setValidityDraft((d) => ({ ...d, validUntil: e.target.value }))}
                   className={detailInputClass}
                 />
               </div>
             </div>
           ) : (
-            <dl className="grid gap-4 sm:grid-cols-2">
-              <DlItem label="Mandant (Zuweisungsgruppe)">{vehicle.mandant.trim() || "–"}</DlItem>
-              <DlItem label="Kostenstelle">{vehicle.costCenter.trim() || "–"}</DlItem>
-            </dl>
+            <>
+              <p className="text-foreground tabular-nums">
+                {formatValidityRange(vehicle.validFrom, vehicle.validUntil)}
+              </p>
+              {!vehicle.validUntil.trim() ? (
+                <p className="mt-1 text-xs text-muted-foreground">Leeres Enddatum = unbefristet</p>
+              ) : null}
+            </>
           )}
         </section>
-
-        <p className="text-xs text-muted-foreground">
-          Gültigkeit: {formatValidityRange(vehicle.validFrom, vehicle.validUntil)}
-          {!vehicle.validUntil.trim() ? " (leeres Enddatum = unbefristet)" : null}
-        </p>
 
         {vehicle.qualifications && vehicle.qualifications.length > 0 ? (
           <section className={pc} aria-labelledby={`fv-qual-${vehicle.id}`}>

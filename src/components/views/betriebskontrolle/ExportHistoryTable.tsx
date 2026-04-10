@@ -1,8 +1,11 @@
 "use client";
 
+import { Fragment } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import type { ControlExport } from "@/domain/controlExportTypes";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { ExportHistoryRowDetailContent } from "./ExportHistoryRowDetailContent";
 
 function formatDateTime(iso: string): string {
   const d = new Date(iso);
@@ -25,17 +28,23 @@ const STATUS_LABEL: Record<ControlExport["status"], string> = {
   failed: "Fehlgeschlagen",
 };
 
+const COL_COUNT = 6;
+
+/** Wie Tab Fahrzeuge (`FahrzeugTable`). */
+const SELECTED_ROW_BG = "bg-[#FFF8E6]";
+const SELECTED_ROW_BG_HOVER = "hover:bg-[#FFF2CC]";
+
 type ExportHistoryTableProps = {
   exports: ControlExport[];
-  selectedId: string | null;
-  onSelect: (exp: ControlExport) => void;
+  expandedId: string | null;
+  onRowActivate: (id: string) => void;
   className?: string;
 };
 
 export function ExportHistoryTable({
   exports,
-  selectedId,
-  onSelect,
+  expandedId,
+  onRowActivate,
   className,
 }: ExportHistoryTableProps) {
   return (
@@ -46,56 +55,94 @@ export function ExportHistoryTable({
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Datum / Uhrzeit</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Zeitraum</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Verantwortliche Person</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Dateiname / Export-ID</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+            <thead className="sticky top-0 z-10 border-b border-border bg-muted/50">
+              <tr>
+                <th
+                  className="w-10 px-2 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                  aria-hidden
+                />
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Datum / Uhrzeit
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Zeitraum
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Verantwortliche Person
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Dateiname / Export-ID
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody>
               {exports.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                  <td colSpan={COL_COUNT} className="px-4 py-12 text-center text-sm text-muted-foreground">
                     Noch keine Exporte erzeugt
                   </td>
                 </tr>
               ) : (
                 exports.map((exp) => {
-                  const isSelected = exp.id === selectedId;
+                  const isExpanded = expandedId === exp.id;
+                  const rowSummary = `${formatDateTime(exp.createdAt)}, ${exp.filename}`;
                   return (
-                    <tr
-                      key={exp.id}
-                      className={cn(
-                        "border-b border-border cursor-pointer transition-colors min-h-[2.75rem]",
-                        "hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
-                        isSelected && "bg-primary/5 border-l-4 border-l-primary"
-                      )}
-                      onClick={() => onSelect(exp)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onSelect(exp);
+                    <Fragment key={exp.id}>
+                      <tr
+                        className={cn(
+                          "border-b border-border min-h-[2.75rem] transition-colors",
+                          "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
+                          isExpanded
+                            ? cn(SELECTED_ROW_BG, SELECTED_ROW_BG_HOVER)
+                            : "hover:bg-muted/20"
+                        )}
+                        onClick={() => onRowActivate(exp.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onRowActivate(exp.id);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        aria-expanded={isExpanded}
+                        aria-pressed={isExpanded}
+                        aria-label={
+                          isExpanded
+                            ? `${rowSummary}. Details ausgeklappt. Ausgewählt (gelbe Markierung).`
+                            : `${rowSummary}. Details einblenden.`
                         }
-                      }}
-                      tabIndex={0}
-                      role="button"
-                      aria-pressed={isSelected}
-                    >
-                      <td className="px-4 py-3">{formatDateTime(exp.createdAt)}</td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {formatDate(exp.dateFrom)} – {formatDate(exp.dateTo)}
-                      </td>
-                      <td className="px-4 py-3">{exp.responsiblePerson}</td>
-                      <td className="px-4 py-3 font-mono text-xs">{exp.filename}</td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
-                          {STATUS_LABEL[exp.status]}
-                        </span>
-                      </td>
-                    </tr>
+                      >
+                        <td className="px-2 py-3 align-middle text-muted-foreground" aria-hidden>
+                          {isExpanded ? (
+                            <ChevronDown className="mx-auto size-4 shrink-0 opacity-70" />
+                          ) : (
+                            <ChevronRight className="mx-auto size-4 shrink-0 opacity-70" />
+                          )}
+                        </td>
+                        <td className="px-4 py-3">{formatDateTime(exp.createdAt)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {formatDate(exp.dateFrom)} – {formatDate(exp.dateTo)}
+                        </td>
+                        <td className="px-4 py-3">{exp.responsiblePerson}</td>
+                        <td className="px-4 py-3 font-mono text-xs">{exp.filename}</td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                            {STATUS_LABEL[exp.status]}
+                          </span>
+                        </td>
+                      </tr>
+                      {isExpanded ? (
+                        <tr className={cn("border-b border-border", SELECTED_ROW_BG)}>
+                          <td colSpan={COL_COUNT} className="p-0 align-top">
+                            <ExportHistoryRowDetailContent exportEntry={exp} contrastOnCream />
+                          </td>
+                        </tr>
+                      ) : null}
+                    </Fragment>
                   );
                 })
               )}

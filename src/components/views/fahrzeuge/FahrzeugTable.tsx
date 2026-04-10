@@ -10,12 +10,13 @@ import {
 } from "@/lib/vehicleUi";
 import { cn } from "@/lib/utils";
 import { FahrzeugRowDetailContent } from "./FahrzeugRowDetailContent";
+import { VehicleSymbolIcon, VEHICLE_SYMBOL_LABELS } from "./VehicleSymbolIcon";
 
 const SELECTED_ROW_BG = "bg-[#FFF8E6]";
 const SELECTED_ROW_BG_HOVER = "hover:bg-[#FFF2CC]";
 const EXPANDED_NEUTRAL_ROW = "hover:bg-muted/25";
 
-const COL_COUNT = 10;
+const COL_COUNT = 11;
 
 type FahrzeugTableProps = {
   vehicles: Vehicle[];
@@ -49,6 +50,9 @@ export function FahrzeugTable({
               className="w-10 px-2 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
               aria-hidden
             />
+            <th className="w-[4.25rem] px-1 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Symbol
+            </th>
             <th className="min-w-[6.5rem] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Kennzeichen
             </th>
@@ -88,7 +92,8 @@ export function FahrzeugTable({
               const isYellow = highlightedId === v.id;
               const artTyp = [v.vehicleCategory, v.vehicleModel].filter(Boolean).join(" · ") || "–";
               const { display: empDisplay, title: empTitle } = formatAssignedEmployee(v.assignedEmployee);
-              const rowSummary = `${v.licensePlate}, ${v.status}, ${artTyp}`;
+              const symbolLabel = VEHICLE_SYMBOL_LABELS[v.symbolType];
+              const rowSummary = `${symbolLabel}, ${v.licensePlate}, ${v.status}, ${artTyp}`;
               return (
                 <Fragment key={v.id}>
                   <tr
@@ -129,6 +134,11 @@ export function FahrzeugTable({
                       ) : (
                         <ChevronRight className="mx-auto size-4 shrink-0 opacity-70" />
                       )}
+                    </td>
+                    <td className="px-1 py-2 align-middle" title={symbolLabel}>
+                      <div className="flex justify-center">
+                        <VehicleSymbolIcon type={v.symbolType} className="text-foreground" />
+                      </div>
                     </td>
                     <td className="px-3 py-3 font-medium text-foreground">{v.licensePlate}</td>
                     <td className="px-3 py-3">

@@ -294,10 +294,10 @@ export function updateVehicle(id: string, input: UpdateVehicleInput): Vehicle | 
 }
 
 export type VehicleDetailFieldsPatch = Partial<
-  Pick<Vehicle, "assignedEmployee" | "mandant" | "costCenter">
+  Pick<Vehicle, "assignedEmployee" | "validFrom" | "validUntil">
 >;
 
-/** Mitarbeiter:in und Organisation – für alle Fahrzeuge (auch Import), unabhängig von `editable`. */
+/** Mitarbeiter:in und Gültigkeit – für alle Fahrzeuge (auch Import), unabhängig von `editable`. */
 export function updateVehicleDetailFields(
   id: string,
   patch: VehicleDetailFieldsPatch
@@ -309,11 +309,11 @@ export function updateVehicleDetailFields(
   if (patch.assignedEmployee !== undefined) {
     next.assignedEmployee = patch.assignedEmployee.trim();
   }
-  if (patch.mandant !== undefined) {
-    next.mandant = patch.mandant.trim();
+  if (patch.validFrom !== undefined) {
+    next.validFrom = patch.validFrom.trim();
   }
-  if (patch.costCenter !== undefined) {
-    next.costCenter = patch.costCenter.trim();
+  if (patch.validUntil !== undefined) {
+    next.validUntil = patch.validUntil.trim();
   }
   vehiclesList[index] = next;
   return next;

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState, useMemo, useEffect } from "react";
-import { getMockDrivingData } from "@/mock/drivingData";
 import {
   ALL_EXPORT_PART_IDS,
   getExportPartsWithStatus,
@@ -11,14 +10,13 @@ import {
 import type { ExportPartType } from "@/domain/controlExportTypes";
 import { DEFAULT_USER_DISPLAY_NAME } from "@/config/layout";
 import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
-import type { ControlExport, ExportConfig } from "@/domain/controlExportTypes";
+import type { ExportConfig } from "@/domain/controlExportTypes";
 import {
   BetriebskontrolleFilters,
   ExportConfigCard,
   ExportPartsCard,
   DataSourceInfo,
   ExportHistoryTable,
-  ExportDetailPanel,
 } from "@/components/views/betriebskontrolle";
 
 function getDefaultConfig(initialDriverId?: string | null): ExportConfig {
@@ -36,8 +34,8 @@ function getDefaultConfig(initialDriverId?: string | null): ExportConfig {
 export default function BetriebskontrollePage() {
   const { drivers, selectedEmployeeId } = useSelectedEmployee();
   const [config, setConfig] = useState<ExportConfig>(() => getDefaultConfig(null));
-  const [history, setHistory] = useState<ControlExport[]>(() => getExportHistory());
-  const [selectedExportId, setSelectedExportId] = useState<string | null>(null);
+  const [history, setHistory] = useState(() => getExportHistory());
+  const [expandedExportId, setExpandedExportId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -58,10 +56,15 @@ export default function BetriebskontrollePage() {
 
   const parts = useMemo(() => getExportPartsWithStatus(config), [config]);
 
-  const selectedExport = useMemo(
-    () => history.find((e) => e.id === selectedExportId) ?? null,
-    [history, selectedExportId]
-  );
+  useEffect(() => {
+    if (expandedExportId != null && !history.some((e) => e.id === expandedExportId)) {
+      setExpandedExportId(null);
+    }
+  }, [history, expandedExportId]);
+
+  const handleExportRowActivate = useCallback((id: string) => {
+    setExpandedExportId((cur) => (cur === id ? null : id));
+  }, []);
 
   const handleGenerate = useCallback(() => {
     setIsGenerating(true);
@@ -73,7 +76,7 @@ export default function BetriebskontrollePage() {
       setSuccessMessage(
         `Exportpaket wurde erstellt: ${result.export.filename}`
       );
-      setSelectedExportId(result.export.id);
+      setExpandedExportId(result.export.id);
       setTimeout(() => setSuccessMessage(null), 5000);
     }
   }, [config]);
@@ -115,15 +118,12 @@ export default function BetriebskontrollePage() {
       <div className="px-4 pb-4">
         <DataSourceInfo className="mb-4" />
       </div>
-      <div className="flex flex-1 min-h-0 px-4 pb-4">
-        <div className="flex-1 min-w-0">
-          <ExportHistoryTable
-            exports={history}
-            selectedId={selectedExportId}
-            onSelect={(exp) => setSelectedExportId(exp.id)}
-          />
-        </div>
-        <ExportDetailPanel exportEntry={selectedExport} />
+      <div className="min-h-0 flex-1 px-4 pb-4">
+        <ExportHistoryTable
+          exports={history}
+          expandedId={expandedExportId}
+          onRowActivate={handleExportRowActivate}
+        />
       </div>
     </div>
   );
