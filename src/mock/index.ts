@@ -14,8 +14,9 @@ export {
   getArvViolationsReportMerged,
   getArvReportFiltersDefault,
   getDriverNameById,
+  aggregateViolationDayGroupStatus,
 } from "./arvViolations";
-export type { ArvReportFilters, MergedArvRow } from "./arvViolations";
+export type { ArvReportFilters, MergedArvRow, ArvViolationDayGroup } from "./arvViolations";
 export {
   getExportPartsWithStatus,
   createExport,
@@ -28,6 +29,12 @@ export {
   getVehicleById,
   createVehicle,
   updateVehicle,
+  updateVehicleDetailFields,
   getVehiclesList,
 } from "./vehicles";
-export type { VehicleFilters, CreateVehicleInput, UpdateVehicleInput } from "./vehicles";
+export type {
+  VehicleFilters,
+  CreateVehicleInput,
+  UpdateVehicleInput,
+  VehicleDetailFieldsPatch,
+} from "./vehicles";

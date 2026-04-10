@@ -1,6 +1,6 @@
 export { ArvFilters } from "./ArvFilters";
 export { ArvViolationTable } from "./ArvViolationTable";
-export { ArvViolationDetail } from "./ArvViolationDetail";
+export { ArvViolationDayGroupDetailContent, originalDataNarrative } from "./ArvViolationDetail";
 export { ArvReportPreview } from "./ArvReportPreview";
 export {
   SEVERITY_LABELS,

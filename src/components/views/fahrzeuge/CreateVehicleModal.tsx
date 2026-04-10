@@ -4,7 +4,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import type { CreateVehicleInput } from "@/mock/vehicles";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 type CreateVehicleModalProps = {
@@ -18,7 +18,9 @@ type CreateVehicleModalProps = {
 const defaultForm: CreateVehicleInput = {
   licensePlate: "",
   vehicleNumber: "",
-  displayName: "",
+  vehicleCategory: "",
+  vehicleModel: "",
+  assignedEmployee: "",
   isCoopVehicle: false,
 };
 
@@ -40,12 +42,18 @@ export function CreateVehicleModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.licensePlate.trim() || !form.vehicleNumber.trim() || !form.displayName.trim()) return;
+    if (
+      !form.licensePlate.trim() ||
+      !form.vehicleNumber.trim() ||
+      !form.vehicleCategory.trim() ||
+      !form.vehicleModel.trim()
+    )
+      return;
     createVehicle(form);
     reset();
     onClose();
     onCreated();
-  }
+  };
 
   if (!open) return null;
 
@@ -65,19 +73,14 @@ export function CreateVehicleModal({
           <h2 id="create-vehicle-title" className="text-lg font-semibold text-foreground">
             Fahrzeug erfassen
           </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleClose}
-            aria-label="Schliessen"
-          >
+          <Button variant="ghost" size="icon" onClick={handleClose} aria-label="Schliessen">
             <X className="size-5" />
           </Button>
         </div>
         <CardContent className="p-4">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <p className="text-xs text-muted-foreground">
-              Quelle wird automatisch auf „Manuell“ gesetzt.
+              Quelle wird automatisch auf „Manuell“ gesetzt. Eine WSP-Fahrzeug-ID wird vergeben.
             </p>
             <div>
               <label htmlFor="cv-license" className="text-xs font-medium text-muted-foreground">
@@ -94,7 +97,7 @@ export function CreateVehicleModal({
             </div>
             <div>
               <label htmlFor="cv-number" className="text-xs font-medium text-muted-foreground">
-                Fahrzeugnummer *
+                Fahrzeugnummer (Matching) *
               </label>
               <input
                 id="cv-number"
@@ -106,15 +109,43 @@ export function CreateVehicleModal({
               />
             </div>
             <div>
-              <label htmlFor="cv-name" className="text-xs font-medium text-muted-foreground">
-                Bezeichnung *
+              <label htmlFor="cv-art" className="text-xs font-medium text-muted-foreground">
+                Fahrzeugart *
               </label>
               <input
-                id="cv-name"
+                id="cv-art"
                 type="text"
-                value={form.displayName}
-                onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+                value={form.vehicleCategory}
+                onChange={(e) => setForm({ ...form, vehicleCategory: e.target.value })}
                 required
+                placeholder="Lastwagen oder Personenwagen"
+                className="mt-0.5 w-full rounded border border-border bg-background px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div>
+              <label htmlFor="cv-typ" className="text-xs font-medium text-muted-foreground">
+                Fahrzeugtyp *
+              </label>
+              <input
+                id="cv-typ"
+                type="text"
+                value={form.vehicleModel}
+                onChange={(e) => setForm({ ...form, vehicleModel: e.target.value })}
+                required
+                placeholder="z. B. TGS 18.430 oder P360"
+                className="mt-0.5 w-full rounded border border-border bg-background px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div>
+              <label htmlFor="cv-emp" className="text-xs font-medium text-muted-foreground">
+                Mitarbeiter:in (optional, 1:1)
+              </label>
+              <input
+                id="cv-emp"
+                type="text"
+                value={form.assignedEmployee ?? ""}
+                onChange={(e) => setForm({ ...form, assignedEmployee: e.target.value })}
+                placeholder="Höchstens eine Person"
                 className="mt-0.5 w-full rounded border border-border bg-background px-2 py-1.5 text-sm"
               />
             </div>
@@ -145,9 +176,7 @@ export function CreateVehicleModal({
               <Button type="button" variant="outline" onClick={handleClose}>
                 Abbrechen
               </Button>
-              <Button type="submit">
-                Speichern
-              </Button>
+              <Button type="submit">Speichern</Button>
             </div>
           </form>
         </CardContent>

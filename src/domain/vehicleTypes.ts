@@ -1,13 +1,13 @@
 /**
  * Domain-Typen für Fahrzeuge (Tab Fahrzeuge).
- * Fahrzeuge aus Import (SAP/WSP/Flotte) oder manuell; Matching zur Ressourcenplanung über Fahrzeugnummer.
+ * Stammdaten gemäss WSP/Schnittstelle; Matching zur Ressourcenplanung über Fahrzeugnummer.
  */
 
 /** Herkunft des Fahrzeugs. */
 export type VehicleSource = "imported" | "manual";
 
 /**
- * LKW-Symbol für die Spalte „Symbole“ (analog Symbolpalette: Pritsche, Elektro, Flüssigkeit, Öko, Koffer, Sattel).
+ * LKW-Symbol (Legacy / erweiterte Ansichten).
  */
 export type VehicleSymbolType =
   | "flatbed"
@@ -28,18 +28,42 @@ export type VehicleQualification = {
 
 export type Vehicle = {
   id: string;
-  /** Kennzeichen */
+  /** Fahrzeug-ID WSP (z. B. VEC17104). */
+  wspVehicleId: string;
+  /** z. B. In Benutzung, Parkplatz. */
+  status: string;
+  /** z. B. Mietfahrzeug, LKW 4x2. */
+  vehicleGroup: string;
+  /** Fahrzeugart: Lastwagen oder Personenwagen. */
+  vehicleCategory: string;
+  /** Fahrzeugtyp (z. B. TGS 18.430, P360). */
+  vehicleModel: string;
+  /** Kennzeichen. */
   licensePlate: string;
-  /** Fahrzeugnummer – zentraler Schlüssel für Matching/Ressourcenplanung */
+  /** VIN / Chassisnummer. */
+  vin: string;
+  /** Mandant (Zuweisungsgruppe). */
+  mandant: string;
+  /** Kostenstelle. */
+  costCenter: string;
+  /** Interne Nummer. */
+  internalNumber: string;
+  /** Stammnummer. */
+  masterNumber: string;
+  /**
+   * Fahrzeugnummer – zentraler Schlüssel für Matching/Ressourcenplanung
+   * (oft identisch mit interner Nummer).
+   */
   vehicleNumber: string;
-  /** Bezeichnung / Typ */
+  /** Kurzbezeichnung für kompakte Anzeigen (z. B. Fahrerkarten-Tooltip). */
   displayName: string;
-  /** Symbol in der Fahrzeugliste (LKW-Icon). */
   symbolType: VehicleSymbolType;
-  /** Zugeordnete Mitarbeitende (Anzeigenamen). */
-  assignedEmployees: string[];
+  /** Höchstens eine zugewiesene Person pro Fahrzeug (1:1 zur Zuweisung). Leer = keine Zuweisung. */
+  assignedEmployee: string;
   /** Gültig ab (YYYY-MM-DD). */
   validFrom: string;
+  /** Gültig bis (YYYY-MM-DD); leer = unbefristet. */
+  validUntil: string;
   source: VehicleSource;
   isCoopVehicle: boolean;
   /** Aus Schnittstelle: nicht bearbeitbar; manuell: bearbeitbar */

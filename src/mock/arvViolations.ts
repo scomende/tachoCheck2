@@ -1,6 +1,6 @@
 /**
  * Mock-Daten für den ARV-Verstoss-Report (Tab „ARV-Verstösse“).
- * Filterbar nach Zeitraum, Mitarbeiter, Schweregrad, Status, Original/Korrigierte Daten.
+ * Filterbar nach Zeitraum und Mitarbeiter (Mock).
  */
 import type {
   ArvViolation,
@@ -128,14 +128,38 @@ export const MOCK_ARV_VIOLATIONS_REPORT: ArvViolation[] = [
     useCorrectedData: false,
     status: "acknowledged",
   },
+  /** Zweiter Verstoss am selben Tag wie arv-1 (d1) – Demo Gruppierung. */
+  {
+    id: "arv-1b",
+    driverId: "d1",
+    date: addDays(WEEK_START, 1),
+    description: "Lenkzeit ohne ausreichende Pause",
+    severity: "medium",
+    violationType: "driving",
+    rule: "ARV Art. 8",
+    timeRange: { start: "13:00", end: "15:30" },
+    useCorrectedData: false,
+    status: "open",
+  },
+  /** Zweiter Verstoss am selben Tag wie arv-3 (d2) – Demo Gruppierung. */
+  {
+    id: "arv-3b",
+    driverId: "d2",
+    date: addDays(WEEK_START, 0),
+    description: "Pausenzeit zu kurz (zweiter Verstoss)",
+    severity: "low",
+    violationType: "pause",
+    rule: "ARV Art. 9 Abs. 2",
+    timeRange: { start: "14:00", end: "14:45" },
+    useCorrectedData: false,
+    status: "open",
+  },
 ];
 
 export type ArvReportFilters = {
   dateFrom: string;
   dateTo: string;
   driverId: string;
-  severity: ArvViolationSeverity | "";
-  status: ArvViolationStatus | "";
   /** Nicht mehr genutzt bei Variante „beide Datenbasen gleichzeitig“; bleibt für Kompatibilität. */
   useCorrectedData?: boolean;
 };
@@ -159,8 +183,6 @@ const defaultFilters = (): ArvReportFilters => ({
   dateFrom: WEEK_START,
   dateTo: addDays(WEEK_START, 6),
   driverId: "",
-  severity: "",
-  status: "",
 });
 
 /** Vergleicht zwei Datumsstrings YYYY-MM-DD. */
@@ -171,7 +193,7 @@ export const getArvReportFiltersDefault = (): ArvReportFilters => defaultFilters
 
 /**
  * Liefert die gefilterte Liste der ARV-Verstösse für den Report.
- * Zeitraum, Mitarbeiter, Schweregrad, Status und optional Original/Korrigiert.
+ * Zeitraum, Mitarbeiter und optional Original/Korrigiert.
  */
 export const getArvViolationsReport = (
   filters: ArvReportFilters
@@ -179,8 +201,6 @@ export const getArvViolationsReport = (
   return MOCK_ARV_VIOLATIONS_REPORT.filter((v) => {
     if (!dateInRange(v.date, filters.dateFrom, filters.dateTo)) return false;
     if (filters.driverId && v.driverId !== filters.driverId) return false;
-    if (filters.severity && v.severity !== filters.severity) return false;
-    if (filters.status && v.status !== filters.status) return false;
     if (filters.useCorrectedData != null && v.useCorrectedData !== filters.useCorrectedData) return false;
     return true;
   });
@@ -189,8 +209,7 @@ export const getArvViolationsReport = (
 /**
  * Liefert Verstösse als zusammengeführte Zeilen: pro logischem Verstoss (driverId + date + violationType)
  * je ein Eintrag mit optional Original- und optional Korrigiert-Variante.
- * Filter: Zeitraum, Mitarbeiter, Schweregrad. Status wird nach dem Zusammenführen angewendet:
- * Pro Zeile gilt genau ein Status = Korrigiert-Status, falls vorhanden, sonst Original-Status.
+ * Filter: Zeitraum, Mitarbeiter.
  */
 export const getArvViolationsReportMerged = (
   filters: ArvReportFilters
@@ -198,7 +217,6 @@ export const getArvViolationsReportMerged = (
   const filtered = MOCK_ARV_VIOLATIONS_REPORT.filter((v) => {
     if (!dateInRange(v.date, filters.dateFrom, filters.dateTo)) return false;
     if (filters.driverId && v.driverId !== filters.driverId) return false;
-    if (filters.severity && v.severity !== filters.severity) return false;
     return true;
   });
 
@@ -235,13 +253,6 @@ export const getArvViolationsReportMerged = (
       corrected,
     }));
 
-  if (filters.status) {
-    rows = rows.filter((row) => {
-      const effectiveStatus = row.corrected?.status ?? row.original?.status;
-      return effectiveStatus === filters.status;
-    });
-  }
-
   return rows.sort((a, b) => {
     const d = a.date.localeCompare(b.date);
     if (d !== 0) return d;
@@ -254,3 +265,77 @@ export const getDriverNameById = (driverId: string): string => {
   const d = MOCK_DRIVERS.find((x) => x.id === driverId);
   return d?.name ?? driverId;
 };
+
+/** Gruppe: eine Person an einem Kalendertag, mehrere logische Verstösse (`MergedArvRow`). */
+export type ArvViolationDayGroup = {
+  /** `driverId|date` */
+  key: string;
+  driverId: string;
+  date: string;
+  violations: MergedArvRow[];
+};
+
+/**
+ * Fasst zusammengeführte Zeilen nach Mitarbeiter:in und Datum (ein Report pro Person/Tag).
+ */
+export const groupMergedRowsByDriverAndDay = (
+  rows: MergedArvRow[]
+): ArvViolationDayGroup[] => {
+  const map = new Map<string, MergedArvRow[]>();
+  for (const row of rows) {
+    const k = `${row.driverId}|${row.date}`;
+    const list = map.get(k);
+    if (list) list.push(row);
+    else map.set(k, [row]);
+  }
+  const groups: ArvViolationDayGroup[] = [];
+  for (const [key, violations] of map) {
+    violations.sort((a, b) => {
+      const ta = (a.corrected ?? a.original)?.timeRange?.start ?? "";
+      const tb = (b.corrected ?? b.original)?.timeRange?.start ?? "";
+      const c = ta.localeCompare(tb);
+      if (c !== 0) return c;
+      const la = a.violationType ? String(a.violationType) : a.description;
+      const lb = b.violationType ? String(b.violationType) : b.description;
+      return la.localeCompare(lb);
+    });
+    groups.push({
+      key,
+      driverId: violations[0].driverId,
+      date: violations[0].date,
+      violations,
+    });
+  }
+  groups.sort((a, b) => {
+    const d = a.date.localeCompare(b.date);
+    if (d !== 0) return d;
+    return getDriverNameById(a.driverId).localeCompare(getDriverNameById(b.driverId));
+  });
+  return groups;
+};
+
+/** Priorität für aggregierten Gruppen-Status (Tabellen-Spalte). */
+const GROUP_STATUS_AGGREGATION_ORDER: ArvViolationStatus[] = [
+  "open",
+  "acknowledged",
+  "signed",
+  "closed",
+];
+
+/**
+ * Ein Status pro Person/Tag: dringlichster zuerst (offen → bestätigt → unterschrieben → abgeschlossen).
+ */
+export function aggregateViolationDayGroupStatus(
+  group: ArvViolationDayGroup
+): ArvViolationStatus | null {
+  const present = new Set(
+    group.violations
+      .map((r) => (r.corrected ?? r.original)?.status)
+      .filter((s): s is ArvViolationStatus => s != null)
+  );
+  if (present.size === 0) return null;
+  for (const st of GROUP_STATUS_AGGREGATION_ORDER) {
+    if (present.has(st)) return st;
+  }
+  return null;
+}

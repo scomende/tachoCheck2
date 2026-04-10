@@ -10,7 +10,6 @@ import {
 } from "react";
 import type { Driver } from "@/domain/drivingTypes";
 import { getMockDrivingData } from "@/mock/drivingData";
-import { filterDriversBySearch } from "@/lib/driverSearch";
 
 export type SelectedEmployeeState = {
   selectedEmployeeId: string | null;

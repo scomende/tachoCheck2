@@ -4,20 +4,29 @@ import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import type { ArvViolation } from "@/domain/drivingTypes";
 import { getDriverNameById } from "@/mock/arvViolations";
-import { formatDayLabelLong, timeStringToMinutes, minutesToPercent } from "@/lib/drivingUtils";
+import { formatDayLabelLong } from "@/lib/drivingUtils";
 import { Button } from "@/components/ui/button";
+import { ArvViolationDayTimelineBar } from "./ArvViolationDayTimelineBar";
+import { VIOLATION_TYPE_LABELS } from "./constants";
 import { cn } from "@/lib/utils";
 
 type ArvReportPreviewProps = {
-  violation: ArvViolation;
+  /** Ein Report pro Mitarbeiter:in und Tag – alle Verstösse des Tages. */
+  driverId: string;
+  date: string;
+  violations: ArvViolation[];
   open: boolean;
   onClose: () => void;
   signed?: boolean;
   className?: string;
 };
 
+const REPORT_TIME_FALLBACK = { start: "00:00", end: "12:00" } as const;
+
 export function ArvReportPreview({
-  violation,
+  driverId,
+  date,
+  violations,
   open,
   onClose,
   signed = false,
@@ -44,11 +53,14 @@ export function ArvReportPreview({
 
   if (!open) return null;
 
-  const timeRange = violation.timeRange ?? { start: "00:00", end: "12:00" };
-  const startMin = timeStringToMinutes(timeRange.start);
-  const endMin = timeStringToMinutes(timeRange.end);
-  const left = minutesToPercent(startMin);
-  const width = minutesToPercent(Math.max(0, endMin - startMin));
+  const actualRanges = violations.map((v) => v.timeRange ?? REPORT_TIME_FALLBACK);
+
+  const rangeCaptions = violations.map((v, i) => {
+    const n = i + 1;
+    const r = v.timeRange ?? REPORT_TIME_FALLBACK;
+    const prefix = violations.length > 1 ? `${n}. ` : "";
+    return `${prefix}Verstoss: ${r.start} – ${r.end}`;
+  });
 
   return (
     <div
@@ -68,7 +80,7 @@ export function ArvReportPreview({
       >
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <h2 id="arv-report-title" className="text-lg font-semibold text-foreground">
-            Verstoss-Report
+            Verstoss-Report (Tag)
           </h2>
           <Button
             variant="ghost"
@@ -80,54 +92,37 @@ export function ArvReportPreview({
           </Button>
         </div>
         <div className="flex-1 overflow-auto p-5">
-          <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+          <div className="mb-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <span className="text-muted-foreground">Mitarbeiter:in</span>
             <span className="font-medium">
-              {violation.driverId ? getDriverNameById(violation.driverId) : "–"}
+              {driverId ? getDriverNameById(driverId) : "–"}
             </span>
             <span className="text-muted-foreground">Datum</span>
-            <span className="font-medium">{formatDayLabelLong(violation.date)}</span>
-            <span className="text-muted-foreground">Verstoss</span>
-            <span className="font-medium">{violation.description}</span>
+            <span className="font-medium">{formatDayLabelLong(date)}</span>
+            <span className="text-muted-foreground">Verstösse</span>
+            <span className="font-medium">{violations.length}</span>
           </div>
 
-          <p className="mb-2 text-xs font-medium text-muted-foreground">
-            Tageszeit (00:00 – 24:00)
-          </p>
-          <div className="relative h-12 w-full rounded border border-border bg-muted/30">
-            {/* Hintergrund: ganzer Tag */}
-            <div className="absolute inset-0 flex">
-              <div
-                className="bg-muted/50"
-                style={{ width: `${left}%` }}
-                title="Vor Verstoss"
-              />
-              <div
-                className="bg-destructive/80"
-                style={{ width: `${width}%` }}
-                title="Verstoss-Zeitraum"
-              />
-              <div
-                className="bg-muted/50"
-                style={{ width: `${100 - left - width}%` }}
-                title="Nach Verstoss"
-              />
-            </div>
-            {/* Stunde-Marken (optional): 6, 12, 18 */}
-            <div className="absolute left-0 top-0 flex h-full w-full pointer-events-none">
-              {[6, 12, 18].map((h) => (
-                <div
-                  key={h}
-                  className="absolute top-0 h-full w-px bg-border"
-                  style={{ left: `${(h / 24) * 100}%` }}
-                  aria-hidden
-                />
-              ))}
-            </div>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Verstoss: {timeRange.start} – {timeRange.end}
-          </p>
+          <p className="mb-2 text-xs font-medium text-muted-foreground">Verstösse im Detail</p>
+          <ol className="mb-5 list-decimal space-y-2 border-b border-border/60 pb-5 pl-5 text-sm marker:text-muted-foreground">
+            {violations.map((v, i) => (
+              <li key={v.id ?? `${i}`} className="pl-1">
+                <span className="font-medium text-foreground">
+                  {v.violationType
+                    ? VIOLATION_TYPE_LABELS[v.violationType]
+                    : v.description}
+                </span>
+                {v.description && v.violationType ? (
+                  <span className="mt-0.5 block text-muted-foreground">{v.description}</span>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+
+          <ArvViolationDayTimelineBar
+            timeRanges={actualRanges}
+            rangeCaptions={rangeCaptions}
+          />
 
           <div className="mt-6 rounded border border-border bg-muted/20 px-3 py-2 text-sm">
             <span className="font-medium text-muted-foreground">Unterschrift: </span>

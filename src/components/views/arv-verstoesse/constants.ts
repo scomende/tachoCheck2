@@ -61,3 +61,7 @@ export const STATUS_OPTIONS: { value: ArvViolationStatus; label: string }[] = [
   { value: "signed", label: STATUS_LABELS.signed },
   { value: "closed", label: STATUS_LABELS.closed },
 ];
+
+/** Hervorhebung Mitarbeitername bei globaler Toolbar-Suche oder -Auswahl (Tab Verstösse). */
+export const GLOBAL_TOOLBAR_DRIVER_NAME_HIGHLIGHT_CLASS =
+  "rounded px-1.5 py-0.5 font-semibold bg-amber-200/95 text-foreground shadow-sm not-italic dark:bg-amber-500/35 dark:text-amber-50";

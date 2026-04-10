@@ -1,13 +1,11 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import Link from "next/link";
 import { Search, X } from "lucide-react";
 import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
 import { filterDriversBySearch } from "@/lib/driverSearch";
 import { cn } from "@/lib/utils";
-
-/** Vorübergehend deaktiviert: globale Mitarbeitenden-Suche. Auf true setzen zum Reaktivieren. */
-const GLOBAL_EMPLOYEE_SEARCH_ENABLED = false;
 
 export const SecondToolbar = () => {
   const {
@@ -69,11 +67,9 @@ export const SecondToolbar = () => {
       aria-label="Suche und Filter"
     >
       <div className="flex w-full items-center justify-between gap-4">
-        {GLOBAL_EMPLOYEE_SEARCH_ENABLED ? (
-        <>
-        <div className="relative flex-1 max-w-md" ref={containerRef}>
+        <div className="relative max-w-md flex-1" ref={containerRef}>
           <Search
-            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none"
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           <input
@@ -107,9 +103,7 @@ export const SecondToolbar = () => {
               role="listbox"
             >
               {filteredDrivers.length === 0 ? (
-                <li className="px-3 py-2.5 text-sm text-muted-foreground">
-                  Keine Treffer
-                </li>
+                <li className="px-3 py-2.5 text-sm text-muted-foreground">Keine Treffer</li>
               ) : (
                 filteredDrivers.map((d) => (
                   <li
@@ -124,9 +118,7 @@ export const SecondToolbar = () => {
                   >
                     {d.name}
                     {d.personalNumber != null && (
-                      <span className="ml-2 text-muted-foreground">
-                        ({d.personalNumber})
-                      </span>
+                      <span className="ml-2 text-muted-foreground">({d.personalNumber})</span>
                     )}
                   </li>
                 ))
@@ -134,27 +126,17 @@ export const SecondToolbar = () => {
             </ul>
           )}
         </div>
-        <div
+        <Link
+          href="#"
+          onClick={(e) => e.preventDefault()}
           className={cn(
-            "flex min-h-10 items-center rounded border border-dashed border-border px-3 py-2",
-            selectedDriver
-              ? "border-border bg-background text-sm text-foreground"
-              : "text-xs text-muted-foreground"
+            "shrink-0 text-sm text-primary underline-offset-4 transition-colors",
+            "hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           )}
         >
-          {selectedDriver ? (
-            <span>Global: {selectedDriver.name}</span>
-          ) : (
-            "Filter – Platzhalter"
-          )}
-        </div>
-        </>
-        ) : (
-          <div className="flex min-h-10 items-center rounded border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
-            Mitarbeiter:in suchen (vorübergehend deaktiviert)
-          </div>
-        )}
+          zur Mitarbeiterverwaltung
+        </Link>
       </div>
     </div>
   );
-}
+};

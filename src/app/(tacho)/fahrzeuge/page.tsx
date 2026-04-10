@@ -1,20 +1,13 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   getVehiclesFiltered,
   createVehicle as createVehicleMock,
-  getVehicleById,
 } from "@/mock/vehicles";
 import type { Vehicle } from "@/domain/vehicleTypes";
 import type { VehicleFilters } from "@/mock/vehicles";
-import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
-import {
-  FahrzeugeFilters,
-  FahrzeugTable,
-  FahrzeugDetailPanel,
-  CreateVehicleModal,
-} from "@/components/views/fahrzeuge";
+import { FahrzeugeFilters, FahrzeugTable, CreateVehicleModal } from "@/components/views/fahrzeuge";
 
 const defaultFilters: VehicleFilters = {
   search: "",
@@ -24,9 +17,10 @@ const defaultFilters: VehicleFilters = {
 };
 
 export default function FahrzeugePage() {
-  const { selectedEmployeeId } = useSelectedEmployee();
   const [filters, setFilters] = useState<VehicleFilters>(defaultFilters);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [expandAllDetails, setExpandAllDetails] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -35,22 +29,46 @@ export default function FahrzeugePage() {
     [filters, refreshKey]
   );
 
-  const selectedVehicle = useMemo(
-    () => (selectedId ? getVehicleById(selectedId) ?? null : null),
-    [selectedId, refreshKey]
-  );
+  useEffect(() => {
+    if (expandedId != null && !vehicles.some((v) => v.id === expandedId)) {
+      setExpandedId(null);
+    }
+    if (highlightedId != null && !vehicles.some((v) => v.id === highlightedId)) {
+      setHighlightedId(null);
+    }
+  }, [vehicles, expandedId, highlightedId]);
 
   const handleCreated = useCallback(() => {
     setRefreshKey((k) => k + 1);
   }, []);
 
-  const handleSelect = useCallback((v: Vehicle) => {
-    setSelectedId(v.id);
+  const handleExpandAllDetailsChange = useCallback((checked: boolean) => {
+    setExpandAllDetails(checked);
+    setExpandedId(null);
+    setHighlightedId(null);
   }, []);
+
+  const handleRowActivate = useCallback(
+    (id: string) => {
+      if (expandAllDetails) {
+        setHighlightedId((h) => (h === id ? null : id));
+        return;
+      }
+      if (expandedId === id) {
+        setExpandedId(null);
+        setHighlightedId(null);
+      } else {
+        setExpandedId(id);
+        setHighlightedId(id);
+      }
+    },
+    [expandAllDetails, expandedId]
+  );
 
   const handleUpdated = useCallback((v: Vehicle) => {
     setRefreshKey((k) => k + 1);
-    setSelectedId(v.id);
+    setExpandedId(v.id);
+    setHighlightedId(v.id);
   }, []);
 
   return (
@@ -60,16 +78,17 @@ export default function FahrzeugePage() {
         filters={filters}
         onFiltersChange={setFilters}
         onOpenCreate={() => setCreateModalOpen(true)}
+        expandAllDetails={expandAllDetails}
+        onExpandAllDetailsChange={handleExpandAllDetailsChange}
       />
-      <div className="flex flex-1 min-h-0">
+      <div className="flex min-h-0 flex-1">
         <FahrzeugTable
           vehicles={vehicles}
-          selectedId={selectedId}
-          onSelect={handleSelect}
-        />
-        <FahrzeugDetailPanel
-          vehicle={selectedVehicle}
-          onUpdated={handleUpdated}
+          expandAllDetails={expandAllDetails}
+          expandedId={expandedId}
+          highlightedId={highlightedId}
+          onRowActivate={handleRowActivate}
+          onVehicleUpdated={handleUpdated}
         />
       </div>
       <CreateVehicleModal

@@ -5,24 +5,35 @@ import { useSearchParams } from "next/navigation";
 import {
   getArvViolationsReportMerged,
   getArvReportFiltersDefault,
+  groupMergedRowsByDriverAndDay,
+  aggregateViolationDayGroupStatus,
 } from "@/mock/arvViolations";
 import type { ArvViolation } from "@/domain/drivingTypes";
+import type { ArvViolationDayGroup } from "@/mock/arvViolations";
 import { useSelectedEmployee } from "@/context/SelectedEmployeeContext";
 import {
   ArvFilters,
   ArvViolationTable,
-  ArvViolationDetail,
   ArvReportPreview,
 } from "@/components/views/arv-verstoesse";
+
+function primaryViolationsFromGroup(group: ArvViolationDayGroup): ArvViolation[] {
+  return group.violations
+    .map((r) => r.corrected ?? r.original)
+    .filter((v): v is ArvViolation => v != null);
+}
 
 function ARVVerstoessePageContent() {
   const searchParams = useSearchParams();
   const { drivers, setSelectedEmployee } = useSelectedEmployee();
   const [filters, setFilters] = useState(getArvReportFiltersDefault);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [reportViolation, setReportViolation] = useState<ArvViolation | null>(
-    null
-  );
+  const [hideClosedGroups, setHideClosedGroups] = useState(false);
+  const [selectedGroupKey, setSelectedGroupKey] = useState<string | null>(null);
+  const [reportDay, setReportDay] = useState<{
+    driverId: string;
+    date: string;
+    violations: ArvViolation[];
+  } | null>(null);
 
   const urlDriverId = searchParams.get("driverId") ?? "";
   const urlDate = searchParams.get("date") ?? "";
@@ -52,41 +63,57 @@ function ARVVerstoessePageContent() {
     [filters]
   );
 
-  useEffect(() => {
-    if (!urlDriverId || !urlDate || mergedRows.length === 0) return;
-    const row = mergedRows.find(
-      (r) => r.driverId === urlDriverId && r.date === urlDate
+  const dayGroups = useMemo(
+    () => groupMergedRowsByDriverAndDay(mergedRows),
+    [mergedRows]
+  );
+
+  const visibleGroups = useMemo(() => {
+    if (!hideClosedGroups) return dayGroups;
+    return dayGroups.filter(
+      (g) => aggregateViolationDayGroupStatus(g) !== "closed"
     );
-    if (row) {
-      const primary = row.corrected ?? row.original;
-      if (primary) setSelectedId(primary.id ?? primary.date);
-    }
-  }, [urlDriverId, urlDate, mergedRows]);
+  }, [dayGroups, hideClosedGroups]);
 
-  const selectedViolation = useMemo(() => {
-    if (!selectedId) return null;
-    for (const row of mergedRows) {
-      if (row.original && (row.original.id ?? row.original.date) === selectedId)
-        return row.original;
-      if (row.corrected && (row.corrected.id ?? row.corrected.date) === selectedId)
-        return row.corrected;
-    }
-    return null;
-  }, [mergedRows, selectedId]);
+  useEffect(() => {
+    if (!urlDriverId || !urlDate || dayGroups.length === 0) return;
+    const group = dayGroups.find(
+      (g) => g.driverId === urlDriverId && g.date === urlDate
+    );
+    if (group) setSelectedGroupKey(group.key);
+  }, [urlDriverId, urlDate, dayGroups]);
 
-  const handleSelect = useCallback((v: ArvViolation) => {
-    setSelectedId(v.id ?? v.date);
+  useEffect(() => {
+    if (
+      selectedGroupKey != null &&
+      !visibleGroups.some((g) => g.key === selectedGroupKey)
+    ) {
+      setSelectedGroupKey(null);
+    }
+  }, [visibleGroups, selectedGroupKey]);
+
+  const handleToggleGroup = useCallback((groupKey: string) => {
+    setSelectedGroupKey((prev) => (prev === groupKey ? null : groupKey));
   }, []);
 
-  const handleShowReport = useCallback((v: ArvViolation) => {
-    setReportViolation(v);
+  const handleShowDayReport = useCallback((group: ArvViolationDayGroup) => {
+    setReportDay({
+      driverId: group.driverId,
+      date: group.date,
+      violations: primaryViolationsFromGroup(group),
+    });
   }, []);
 
   const handleCloseReport = useCallback(() => {
-    setReportViolation(null);
+    setReportDay(null);
   }, []);
 
-  const reportSigned = reportViolation?.status === "signed" || reportViolation?.status === "closed";
+  const reportSigned =
+    reportDay != null &&
+    reportDay.violations.length > 0 &&
+    reportDay.violations.every(
+      (v) => v.status === "signed" || v.status === "closed"
+    );
 
   return (
     <div className="flex h-full flex-col">
@@ -95,21 +122,22 @@ function ARVVerstoessePageContent() {
         filters={filters}
         drivers={drivers}
         onFiltersChange={handleFiltersChange}
+        hideClosedGroups={hideClosedGroups}
+        onHideClosedGroupsChange={setHideClosedGroups}
       />
-      <div className="flex flex-1 min-h-0">
+      <div className="flex min-h-0 flex-1 flex-col">
         <ArvViolationTable
-          rows={mergedRows}
-          selectedId={selectedId}
-          onSelect={handleSelect}
-        />
-        <ArvViolationDetail
-          violation={selectedViolation}
-          onShowReport={handleShowReport}
+          groups={visibleGroups}
+          selectedGroupKey={selectedGroupKey}
+          onToggleGroup={handleToggleGroup}
+          onShowDayReport={handleShowDayReport}
         />
       </div>
-      {reportViolation && (
+      {reportDay && (
         <ArvReportPreview
-          violation={reportViolation}
+          driverId={reportDay.driverId}
+          date={reportDay.date}
+          violations={reportDay.violations}
           open={true}
           onClose={handleCloseReport}
           signed={reportSigned}

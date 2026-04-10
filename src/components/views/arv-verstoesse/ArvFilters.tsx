@@ -2,13 +2,14 @@
 
 import type { Driver } from "@/domain/drivingTypes";
 import type { ArvReportFilters } from "@/mock/arvViolations";
-import { SEVERITY_OPTIONS, STATUS_OPTIONS } from "./constants";
 import { cn } from "@/lib/utils";
 
 type ArvFiltersProps = {
   filters: ArvReportFilters;
   drivers: Driver[];
   onFiltersChange: (f: ArvReportFilters) => void;
+  hideClosedGroups: boolean;
+  onHideClosedGroupsChange: (value: boolean) => void;
   className?: string;
 };
 
@@ -16,6 +17,8 @@ export function ArvFilters({
   filters,
   drivers,
   onFiltersChange,
+  hideClosedGroups,
+  onHideClosedGroupsChange,
   className,
 }: ArvFiltersProps) {
   const update = (patch: Partial<ArvReportFilters>) =>
@@ -72,45 +75,39 @@ export function ArvFilters({
           ))}
         </select>
       </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="arv-severity" className="text-xs font-medium text-muted-foreground">
-          Schweregrad
-        </label>
-        <select
-          id="arv-severity"
-          value={filters.severity}
-          onChange={(e) =>
-            update({ severity: e.target.value as ArvReportFilters["severity"] })
-          }
-          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
+
+      <div
+        className={cn(
+          "flex min-h-9 items-center gap-3 rounded-md border border-border/80 bg-background/80 px-3 py-2",
+          "sm:ml-auto"
+        )}
+      >
+        <span
+          id="arv-hide-closed-label"
+          className="text-xs font-medium leading-snug text-foreground"
         >
-          <option value="">Alle</option>
-          {SEVERITY_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="arv-status" className="text-xs font-medium text-muted-foreground">
-          Status
-        </label>
-        <select
-          id="arv-status"
-          value={filters.status}
-          onChange={(e) =>
-            update({ status: e.target.value as ArvReportFilters["status"] })
-          }
-          className="h-9 rounded border border-border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
+          Abgeschlossene ausblenden
+        </span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={hideClosedGroups}
+          aria-labelledby="arv-hide-closed-label"
+          onClick={() => onHideClosedGroupsChange(!hideClosedGroups)}
+          className={cn(
+            "relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+            hideClosedGroups ? "bg-primary" : "bg-muted"
+          )}
         >
-          <option value="">Alle</option>
-          {STATUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+          <span
+            className={cn(
+              "pointer-events-none mt-0.5 block size-5 rounded-full bg-background shadow-sm ring-1 ring-border/40 transition-transform",
+              hideClosedGroups ? "translate-x-[1.375rem]" : "translate-x-0.5"
+            )}
+            aria-hidden
+          />
+        </button>
       </div>
     </div>
   );

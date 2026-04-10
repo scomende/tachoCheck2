@@ -1,6 +1,5 @@
 "use client";
 
-import type { VehicleSource } from "@/domain/vehicleTypes";
 import type { VehicleFilters } from "@/mock/vehicles";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +7,8 @@ type FahrzeugeFiltersProps = {
   filters: VehicleFilters;
   onFiltersChange: (f: VehicleFilters) => void;
   onOpenCreate: () => void;
+  expandAllDetails: boolean;
+  onExpandAllDetailsChange: (value: boolean) => void;
   className?: string;
 };
 
@@ -21,6 +22,8 @@ export function FahrzeugeFilters({
   filters,
   onFiltersChange,
   onOpenCreate,
+  expandAllDetails,
+  onExpandAllDetailsChange,
   className,
 }: FahrzeugeFiltersProps) {
   const update = (patch: Partial<VehicleFilters>) =>
@@ -37,7 +40,7 @@ export function FahrzeugeFilters({
     >
       <div className="flex min-w-[200px] flex-col gap-1.5">
         <label htmlFor="fv-search" className="text-xs font-medium text-muted-foreground">
-          Suche (Kennzeichen, Fahrzeugnummer, Bezeichnung)
+          Suche (Kennzeichen, ID, Nummern, VIN, Status, …)
         </label>
         <input
           id="fv-search"
@@ -101,6 +104,22 @@ export function FahrzeugeFilters({
           <option value="no">Nein</option>
         </select>
       </div>
+      <label
+        className="flex cursor-pointer items-center gap-2 self-end pb-1"
+        id="fv-expand-all-details-desc"
+      >
+        <span className="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border border-border bg-muted transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 has-[:checked]:border-primary has-[:checked]:bg-primary">
+          <input
+            type="checkbox"
+            checked={expandAllDetails}
+            onChange={(e) => onExpandAllDetailsChange(e.target.checked)}
+            aria-describedby="fv-expand-all-details-desc"
+            className="peer sr-only"
+          />
+          <span className="pointer-events-none absolute left-0.5 top-1/2 size-3.5 -translate-y-1/2 rounded-full bg-muted-foreground shadow-sm transition-transform peer-checked:translate-x-5 peer-checked:bg-primary-foreground" />
+        </span>
+        <span className="text-sm text-foreground">Alle Details einblenden</span>
+      </label>
       <div className="flex flex-col gap-1.5">
         <span className="text-xs font-medium text-muted-foreground">&nbsp;</span>
         <button
