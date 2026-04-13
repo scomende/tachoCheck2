@@ -24,7 +24,7 @@ const EXPORT_PARTS: Omit<ExportPart, "status">[] = [
   { id: "arv_reports", label: "ARV-Reports pro Fahrer:in" },
   { id: "avg_work_time", label: "Aufstellung durchschnittliche Arbeitszeit" },
   { id: "personal_data", label: "Personalien / Kontaktangaben" },
-  { id: "mass_storage", label: "Massenspeicherdaten (Fahrzeug)", hint: "Wird von externem System geliefert" },
+  { id: "mass_storage", label: "Fahrzeugdaten aus dem digitalen Fahrtenschreiber", hint: "Wird von externem System geliefert" },
 ];
 
 /** In-Memory-Export-Historie (Mock). */
@@ -44,7 +44,7 @@ let exportHistory: ControlExport[] = [
       { id: "arv_reports", label: "ARV-Reports pro Fahrer:in", status: "enthalten" },
       { id: "avg_work_time", label: "Aufstellung durchschnittliche Arbeitszeit", status: "enthalten" },
       { id: "personal_data", label: "Personalien / Kontaktangaben", status: "enthalten" },
-      { id: "mass_storage", label: "Massenspeicherdaten (Fahrzeug)", status: "extern", hint: "Wird von externem System geliefert" },
+      { id: "mass_storage", label: "Fahrzeugdaten aus dem digitalen Fahrtenschreiber", status: "extern", hint: "Wird von externem System geliefert" },
     ],
   },
 ];
@@ -52,7 +52,7 @@ let exportHistory: ControlExport[] = [
 /**
  * Bestandteile mit Status für die aktuelle Konfiguration.
  * Tacho Check liefert: Fahrerkarten, ARV-Reports, Arbeitszeit, Personalien = enthalten.
- * Massenspeicher = extern.
+ * Fahrzeugdaten (digitaler Fahrtenschreiber) = extern.
  */
 export function getExportPartsWithStatus(_config: ExportConfig): ExportPart[] {
   const statusByPart: Record<ExportPart["id"], ExportPartStatus> = {
