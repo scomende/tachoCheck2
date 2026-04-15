@@ -20,7 +20,7 @@ src/
 ├── components/
 │   ├── views/
 │   │   ├── weekly-driver-view.tsx   # Fahrerkarten-Inhalt
-│   │   ├── arv-violations-panel.tsx  # ARV-Verstösse (US-05)
+│   │   ├── arv-violations-panel.tsx  # ARV-Verletzungen (US-05)
 │   │   └── placeholder-content.tsx  # Platzhalter für andere Tabs
 │   ├── ui/                           # Shadcn-UI-Primitive
 │   └── examples/

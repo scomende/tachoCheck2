@@ -533,7 +533,7 @@ const SELECTED_NON_COOP_DAY_BG_HOVER = "hover:bg-[#e2ddd2]";
 type DayRowProps = {
   day: DrivingDay;
   isExpanded?: boolean;
-  /** Gelber Hintergrund (#FFF8E6) nur wenn diese Zeile per Klick gewählt ist (sync mit „Verstösse dieser Woche“). */
+  /** Gelber Hintergrund (#FFF8E6) nur wenn diese Zeile per Klick gewählt ist (sync mit „Verletzungen dieser Woche“). */
   isCreamHighlight?: boolean;
   /** Kein Coop-Fahrzeug an diesem Tag (Lenksegmente nur Nicht-Coop): Zeile ausgegraut. */
   isNonCoopVehicleDay?: boolean;
@@ -631,8 +631,8 @@ const DayRow = ({
         {dayLabel}
         {SeverityIcon && (
           <span
-            title={severity === "high" ? "Verstoss (Hoch)" : severity === "medium" ? "Verstoss (Mittel)" : "Verstoss (Gering)"}
-            aria-label={severity === "high" ? "Verstoss: Hoch" : severity === "medium" ? "Verstoss: Mittel" : "Verstoss: Gering"}
+            title={severity === "high" ? "Verletzung (hoch)" : severity === "medium" ? "Verletzung (mittel)" : "Verletzung (gering)"}
+            aria-label={severity === "high" ? "Verletzung: hoch" : severity === "medium" ? "Verletzung: mittel" : "Verletzung: gering"}
             className="inline-flex"
           >
             <SeverityIcon
@@ -691,7 +691,7 @@ const DayRow = ({
                 />
               );
             })}
-            {/* Verstoss-Zeiträume: nur dünner dunkelroter Rahmen, Zeitfarben bleiben sichtbar */}
+            {/* Verletzungs-Zeiträume: nur dünner dunkelroter Rahmen, Zeitfarben bleiben sichtbar */}
             {dayViolations
               .filter((v): v is ArvViolation & { timeRange: { start: string; end: string } } => !!v.timeRange)
               .map((v, i) => {
@@ -709,8 +709,8 @@ const DayRow = ({
                       width: `${Math.max(width, 2)}%`,
                     }}
                     role="img"
-                    aria-label={`Verstoss: ${v.description}, ${v.timeRange!.start} bis ${v.timeRange!.end}`}
-                    title={`Verstoss: ${v.description} (${v.timeRange!.start} – ${v.timeRange!.end})`}
+                    aria-label={`Verletzung: ${v.description}, ${v.timeRange!.start} bis ${v.timeRange!.end}`}
+                    title={`Verletzung: ${v.description} (${v.timeRange!.start} – ${v.timeRange!.end})`}
                   />
                 );
               })}

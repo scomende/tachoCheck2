@@ -25,13 +25,13 @@ function formatTimeRange(range: { start: string; end: string }): string {
   return `${range.start} – ${range.end}`;
 }
 
-/** Fliesstext zu den Originaldaten (Tab Verstösse, aufgeklappter Bereich). */
+/** Fliesstext zu den Originaldaten (Tab Verletzungen, aufgeklappter Bereich). */
 export function originalDataNarrative(v: ArvViolation): string {
   const parts: string[] = [];
   const sev = v.severity ? SEVERITY_LABELS[v.severity] : "Vorhanden";
   parts.push(`Schweregrad ${sev}`);
   if (v.status) parts.push(`Status ${STATUS_LABELS[v.status]}`);
-  if (v.violationType) parts.push(`Verstosstyp ${VIOLATION_TYPE_LABELS[v.violationType]}`);
+  if (v.violationType) parts.push(`Verletzungstyp ${VIOLATION_TYPE_LABELS[v.violationType]}`);
   if (v.timeRange) {
     parts.push(`Zeitraum ${formatTimeRange(v.timeRange)}`);
   }
@@ -86,7 +86,7 @@ type ArvViolationDayGroupDetailContentProps = {
 };
 
 /**
- * Aufgeklappter Bereich: alle Verstösse des Tages, gemeinsames Tagesraster, ein Report pro Tag.
+ * Aufgeklappter Bereich: alle Verletzungen des Tages, gemeinsames Tagesraster, ein Report pro Tag.
  */
 export function ArvViolationDayGroupDetailContent({
   group,
@@ -116,9 +116,9 @@ export function ArvViolationDayGroupDetailContent({
   const rangeCaptions = primaries.map((p, i) => {
     const n = i + 1;
     if (p.timeRange) {
-      return `${primaries.length > 1 ? `${n}. ` : ""}Verstoss: ${formatTimeRange(p.timeRange)}`;
+      return `${primaries.length > 1 ? `${n}. ` : ""}Verletzung: ${formatTimeRange(p.timeRange)}`;
     }
-    return `${primaries.length > 1 ? `${n}. ` : ""}Verstoss: kein Uhrzeitraum hinterlegt`;
+    return `${primaries.length > 1 ? `${n}. ` : ""}Verletzung: kein Uhrzeitraum hinterlegt`;
   });
 
   const fahrerkartenHref = group.driverId
@@ -139,15 +139,15 @@ export function ArvViolationDayGroupDetailContent({
     <div
       className={cn("border-t border-border/60 px-4 py-4 text-sm", className)}
       role="region"
-      aria-label={`Verstösse ${formatDayLabelLong(group.date)}`}
+      aria-label={`Verletzungen ${formatDayLabelLong(group.date)}`}
     >
       <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Verstösse an diesem Tag ({primaries.length})
+        Verletzungen an diesem Tag ({primaries.length})
       </h3>
 
       <ul
         className="mb-6 grid list-none grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-        aria-label={`${primaries.length} Verstoss${primaries.length === 1 ? "" : "e"} als Karten`}
+        aria-label={`${primaries.length === 1 ? "Eine Verletzung" : `${primaries.length} Verletzungen`} als Karten`}
       >
         {group.violations.map((row, index) => {
           const v = primaryViolation(row);
@@ -159,7 +159,7 @@ export function ArvViolationDayGroupDetailContent({
                 tabIndex={0}
                 role="button"
                 aria-pressed={selectedCardIndex === index}
-                aria-label={`Verstoss ${index + 1} von ${primaries.length}. Karte wählen, um den Zeitraum im Tagesraster hervorzuheben.`}
+                aria-label={`Verletzung ${index + 1} von ${primaries.length}. Karte wählen, um den Zeitraum im Tagesraster hervorzuheben.`}
                 onClick={() => setSelectedCardIndex(index)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -206,7 +206,7 @@ export function ArvViolationDayGroupDetailContent({
                 <div className="flex flex-1 flex-col gap-3 text-xs">
                   <div className={fieldClass}>
                     <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      Verstosszeitraum
+                      Verletzungszeitraum
                     </span>
                     {v.timeRange ? (
                       <span className="font-semibold tabular-nums text-foreground">
@@ -257,7 +257,7 @@ export function ArvViolationDayGroupDetailContent({
 
       <div className="mb-5 rounded-md border border-border/80 bg-background/80 p-3 shadow-sm">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Tagesraster (alle Verstösse)
+          Tagesraster (alle Verletzungen)
         </p>
         <ArvViolationDayTimelineBar
           timeRanges={barTimeRanges}

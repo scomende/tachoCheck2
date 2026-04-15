@@ -99,7 +99,7 @@ export const getMockDrivingData = () => ({
   driverWeeks: MOCK_DRIVER_WEEKS,
 });
 
-/** US-05: ARV-Verstösse pro Fahrer:in und Woche (Mock). */
+/** US-05: ARV-Verletzungen pro Fahrer:in und Woche (Mock). */
 type ArvViolationsForWeek = {
   driverId: string;
   weekStart: string;

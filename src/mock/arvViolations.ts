@@ -1,5 +1,5 @@
 /**
- * Mock-Daten für den ARV-Verstoss-Report (Tab „ARV-Verstösse“).
+ * Mock-Daten für den ARV-Verletzungsreport (Tab „Verletzungen“ / ARV).
  * Filterbar nach Zeitraum und Mitarbeiter (Mock).
  */
 import type {
@@ -18,7 +18,7 @@ const addDays = (dateStr: string, days: number): string => {
 
 const WEEK_START = "2025-05-19";
 
-/** Alle Verstösse für den Report (mit Original- und Korrigiert-Varianten). */
+/** Alle Verletzungen für den Report (mit Original- und Korrigiert-Varianten). */
 export const MOCK_ARV_VIOLATIONS_REPORT: ArvViolation[] = [
   {
     id: "arv-1",
@@ -128,7 +128,7 @@ export const MOCK_ARV_VIOLATIONS_REPORT: ArvViolation[] = [
     useCorrectedData: false,
     status: "acknowledged",
   },
-  /** Zweiter Verstoss am selben Tag wie arv-1 (d1) – Demo Gruppierung. */
+  /** Zweite Verletzung am selben Tag wie arv-1 (d1) – Demo Gruppierung. */
   {
     id: "arv-1b",
     driverId: "d1",
@@ -141,12 +141,12 @@ export const MOCK_ARV_VIOLATIONS_REPORT: ArvViolation[] = [
     useCorrectedData: false,
     status: "open",
   },
-  /** Zweiter Verstoss am selben Tag wie arv-3 (d2) – Demo Gruppierung. */
+  /** Zweite Verletzung am selben Tag wie arv-3 (d2) – Demo Gruppierung. */
   {
     id: "arv-3b",
     driverId: "d2",
     date: addDays(WEEK_START, 0),
-    description: "Pausenzeit zu kurz (zweiter Verstoss)",
+    description: "Pausenzeit zu kurz (zweite Verletzung)",
     severity: "low",
     violationType: "pause",
     rule: "ARV Art. 9 Abs. 2",
@@ -164,7 +164,7 @@ export type ArvReportFilters = {
   useCorrectedData?: boolean;
 };
 
-/** Eine Zeile in der kombinierten Tabelle: ein logischer Verstoss mit optional Original- und Korrigiert-Eintrag. */
+/** Eine Zeile in der kombinierten Tabelle: eine logische Verletzung mit optional Original- und Korrigiert-Eintrag. */
 export type MergedArvRow = {
   /** Eindeutiger Schlüssel (driverId|date|violationType). */
   key: string;
@@ -173,9 +173,9 @@ export type MergedArvRow = {
   violationType: ArvViolationType | undefined;
   /** Kurzbeschreibung (von Original oder Korrigiert). */
   description: string;
-  /** Verstoss in Originaldaten, falls vorhanden. */
+  /** Verletzung in Originaldaten, falls vorhanden. */
   original: ArvViolation | null;
-  /** Verstoss in Korrigierten Daten, falls vorhanden. */
+  /** Verletzung in korrigierten Daten, falls vorhanden. */
   corrected: ArvViolation | null;
 };
 
@@ -192,7 +192,7 @@ const dateInRange = (date: string, from: string, to: string): boolean =>
 export const getArvReportFiltersDefault = (): ArvReportFilters => defaultFilters();
 
 /**
- * Liefert die gefilterte Liste der ARV-Verstösse für den Report.
+ * Liefert die gefilterte Liste der ARV-Verletzungen für den Report.
  * Zeitraum, Mitarbeiter und optional Original/Korrigiert.
  */
 export const getArvViolationsReport = (
@@ -207,7 +207,7 @@ export const getArvViolationsReport = (
 };
 
 /**
- * Liefert Verstösse als zusammengeführte Zeilen: pro logischem Verstoss (driverId + date + violationType)
+ * Liefert Verletzungen als zusammengeführte Zeilen: pro logischer Verletzung (driverId + date + violationType)
  * je ein Eintrag mit optional Original- und optional Korrigiert-Variante.
  * Filter: Zeitraum, Mitarbeiter.
  */
@@ -266,7 +266,7 @@ export const getDriverNameById = (driverId: string): string => {
   return d?.name ?? driverId;
 };
 
-/** Gruppe: eine Person an einem Kalendertag, mehrere logische Verstösse (`MergedArvRow`). */
+/** Gruppe: eine Person an einem Kalendertag, mehrere logische Verletzungen (`MergedArvRow`). */
 export type ArvViolationDayGroup = {
   /** `driverId|date` */
   key: string;

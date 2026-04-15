@@ -11,7 +11,7 @@ const MINUTES_DAY = 24 * 60;
 const SCALE_HOURS = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24] as const;
 
 /**
- * Segmente für den Verstoss-Balken (00:00–24:00).
+ * Segmente für den Verletzungsbalken (00:00–24:00).
  * Über Mitternacht: zwei Bereiche (z. B. 22:00–24:00 und 00:00–05:00).
  */
 function segmentsForViolationRange(
@@ -40,13 +40,13 @@ function segmentsForViolationRange(
   return [{ leftPct: minutesToPercent(startMin), widthPct: hairline }];
 }
 
-/** Mindestbreite in %, damit der Verstoss-Balken auf schmalen Viewports lesbar bleibt. */
+/** Mindestbreite in %, damit der Verletzungsbalken auf schmalen Viewports lesbar bleibt. */
 const MIN_SEGMENT_WIDTH_PCT = 0.45;
 
 type FlatSegment = {
   leftPct: number;
   widthPct: number;
-  /** Index des Verstosses in der Tagesliste (Karten-Reihenfolge). */
+  /** Index der Verletzung in der Tagesliste (Karten-Reihenfolge). */
   primaryIndex: number;
 };
 
@@ -67,19 +67,19 @@ function flattenSegments(
 function defaultRangeCaptions(ranges: ViolationDayTimeRange[]): string[] {
   return ranges.map(
     (r, i) =>
-      `${ranges.length > 1 ? `${i + 1}. ` : ""}Verstoss: ${r.start} – ${r.end}`
+      `${ranges.length > 1 ? `${i + 1}. ` : ""}Verletzung: ${r.start} – ${r.end}`
   );
 }
 
 type ArvViolationDayTimelineBarProps = {
-  /** Ein oder mehrere Verstoss-Zeiträume am selben Tag (übereinander gezeichnet). */
+  /** Ein oder mehrere Verletzungs-Zeiträume am selben Tag (übereinander gezeichnet). */
   timeRanges: ViolationDayTimeRange[];
   /**
-   * Gleiche Länge wie `timeRanges`: Primärindex in der Verstossliste (Karten).
+   * Gleiche Länge wie `timeRanges`: Primärindex in der Verletzungsliste (Karten).
    * Erforderlich, wenn `selectedPrimaryIndex` gesetzt ist.
    */
   primaryIndices?: number[];
-  /** Hervorgehobener Verstoss im Raster (übrige Bereiche abgeschwächt). */
+  /** Hervorgehobene Verletzung im Raster (übrige Bereiche abgeschwächt). */
   selectedPrimaryIndex?: number | null;
   className?: string;
   /** Höhe: `default` wie Report-Dialog, `compact` für eingebettete Detailansicht */
@@ -88,14 +88,14 @@ type ArvViolationDayTimelineBarProps = {
   rangeCaptions?: string[];
   /**
    * Optional: Hervorhebung der Beschriftungszeile (Index = Kartenindex, nicht nur Balken).
-   * Länge typischerweise Anzahl aller Verstösse des Tags.
+   * Länge typischerweise Anzahl aller Verletzungen des Tags.
    */
   captionPrimaryIndices?: number[];
 };
 
 /**
  * Tageszeit 00:00–24:00: Stundenraster + Achse.
- * Mehrere Verstösse = mehrere rote Bereiche am selben Balken.
+ * Mehrere Verletzungen = mehrere rote Bereiche am selben Balken.
  */
 export function ArvViolationDayTimelineBar({
   timeRanges,
@@ -128,8 +128,8 @@ export function ArvViolationDayTimelineBar({
   );
   const ariaLabel =
     timeRanges.length === 0
-      ? "Keine Verstoss-Zeiträume am Tag hinterlegt."
-      : `Tageszeit von Mitternacht bis Mitternacht. ${timeRanges.length} Verstoss-Bereich${timeRanges.length === 1 ? "" : "e"}: ${ariaParts.join("; ")}.`;
+      ? "Keine Verletzungs-Zeiträume am Tag hinterlegt."
+      : `Tageszeit von Mitternacht bis Mitternacht. ${timeRanges.length === 1 ? "Ein Verletzungsbereich" : `${timeRanges.length} Verletzungsbereiche`}: ${ariaParts.join("; ")}.`;
 
   return (
     <div className={cn("w-full", className)}>
@@ -179,7 +179,7 @@ export function ArvViolationDayTimelineBar({
                       : "z-[2] border-destructive/50 bg-destructive/40 opacity-55"
                   )}
                   style={{ left: `${seg.leftPct}%`, width: `${seg.widthPct}%` }}
-                  title="Verstoss-Zeitraum"
+                  title="Verletzungszeitraum"
                   aria-hidden
                 />
               );

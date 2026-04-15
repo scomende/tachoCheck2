@@ -8,7 +8,7 @@ export const APP_TITLE = "Tacho Check" as const;
 
 export const TABS = [
   { label: "Fahrerkarten", href: "/fahrerkarten" },
-  { label: "Verstösse", href: "/arv-verstoesse" },
+  { label: "Verletzungen", href: "/arv-verstoesse" },
   { label: "Betriebskontrolle", href: "/betriebskontrolle" },
   { label: "Fahrzeuge", href: "/fahrzeuge" },
 ] as const;

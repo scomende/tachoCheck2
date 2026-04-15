@@ -11,7 +11,7 @@ import { VIOLATION_TYPE_LABELS } from "./constants";
 import { cn } from "@/lib/utils";
 
 type ArvReportPreviewProps = {
-  /** Ein Report pro Mitarbeiter:in und Tag – alle Verstösse des Tages. */
+  /** Ein Report pro Mitarbeiter:in und Tag – alle Verletzungen des Tages. */
   driverId: string;
   date: string;
   violations: ArvViolation[];
@@ -59,7 +59,7 @@ export function ArvReportPreview({
     const n = i + 1;
     const r = v.timeRange ?? REPORT_TIME_FALLBACK;
     const prefix = violations.length > 1 ? `${n}. ` : "";
-    return `${prefix}Verstoss: ${r.start} – ${r.end}`;
+    return `${prefix}Verletzung: ${r.start} – ${r.end}`;
   });
 
   return (
@@ -80,7 +80,7 @@ export function ArvReportPreview({
       >
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <h2 id="arv-report-title" className="text-lg font-semibold text-foreground">
-            Verstoss-Report (Tag)
+            Verletzungsreport (Tag)
           </h2>
           <Button
             variant="ghost"
@@ -99,11 +99,11 @@ export function ArvReportPreview({
             </span>
             <span className="text-muted-foreground">Datum</span>
             <span className="font-medium">{formatDayLabelLong(date)}</span>
-            <span className="text-muted-foreground">Verstösse</span>
+            <span className="text-muted-foreground">Verletzungen</span>
             <span className="font-medium">{violations.length}</span>
           </div>
 
-          <p className="mb-2 text-xs font-medium text-muted-foreground">Verstösse im Detail</p>
+          <p className="mb-2 text-xs font-medium text-muted-foreground">Verletzungen im Detail</p>
           <ol className="mb-5 list-decimal space-y-2 border-b border-border/60 pb-5 pl-5 text-sm marker:text-muted-foreground">
             {violations.map((v, i) => (
               <li key={v.id ?? `${i}`} className="pl-1">

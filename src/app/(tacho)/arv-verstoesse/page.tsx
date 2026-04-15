@@ -23,7 +23,7 @@ function primaryViolationsFromGroup(group: ArvViolationDayGroup): ArvViolation[]
     .filter((v): v is ArvViolation => v != null);
 }
 
-function ARVVerstoessePageContent() {
+function ARVVerletzungenPageContent() {
   const searchParams = useSearchParams();
   const { drivers, setSelectedEmployee } = useSelectedEmployee();
   const [filters, setFilters] = useState(getArvReportFiltersDefault);
@@ -117,7 +117,7 @@ function ARVVerstoessePageContent() {
 
   return (
     <div className="flex h-full flex-col">
-      <h1 className="sr-only">Verstösse</h1>
+      <h1 className="sr-only">Verletzungen</h1>
       <ArvFilters
         filters={filters}
         drivers={drivers}
@@ -147,10 +147,10 @@ function ARVVerstoessePageContent() {
   );
 }
 
-export default function ARVVerstoessePage() {
+export default function ARVVerletzungenPage() {
   return (
     <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-muted-foreground">Laden…</div>}>
-      <ARVVerstoessePageContent />
+      <ARVVerletzungenPageContent />
     </Suspense>
   );
 }

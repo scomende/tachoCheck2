@@ -18,7 +18,7 @@ src/
 ├── layout/                       # App-Shell (nur UI, keine Domain/Mock)
 │   ├── app-bar.tsx               # Erste Toolbar (Titel, Kostenstelle, Rayon, User, Sprache)
 │   ├── second-toolbar.tsx        # Suchfeld „Mitarbeiter:in suchen…“ + Filter-Platzhalter
-│   └── tab-nav.tsx               # Tab-Navigation (Fahrerkarten, ARV-Verstoesse, …)
+│   └── tab-nav.tsx               # Tab-Navigation (Fahrerkarten, Verletzungen /arv-verstoesse, …)
 │
 ├── components/
 │   ├── ui/                       # Wiederverwendbare UI-Primitive (Shadcn)
@@ -26,7 +26,7 @@ src/
 │   │   └── card.tsx
 │   ├── views/                    # Feature-spezifische Ansichten
 │   │   ├── weekly-driver-view.tsx   # US-01 Wochenansicht
-│   │   ├── arv-violations-panel.tsx  # US-05 ARV-Verstösse-Panel
+│   │   ├── arv-violations-panel.tsx  # US-05 ARV-Verletzungen-Panel
 │   │   └── placeholder-content.tsx   # „… – in Arbeit“ für andere Tabs
 │   └── examples/
 │       └── demo-counter.tsx
@@ -36,7 +36,7 @@ src/
 │   └── index.ts                 # Re-Export aller Domain-Typen
 │
 ├── mock/                        # Mock-Daten (Daten-Schicht für Entwicklung)
-│   ├── drivingData.ts            # MOCK_DRIVERS, MOCK_DRIVER_WEEKS, ARV-Verstösse, getter
+│   ├── drivingData.ts            # MOCK_DRIVERS, MOCK_DRIVER_WEEKS, ARV-Verletzungen, getter
 │   └── index.ts                 # Re-Export für zentrale Daten-Zugriffe
 │
 ├── config/                      # Konfiguration (Layout, Tabs, Dropdown-Optionen)

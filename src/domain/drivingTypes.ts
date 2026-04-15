@@ -67,13 +67,13 @@ export type DriverWeek = {
   days: DrivingDay[];
 };
 
-/** US-05: ARV-Verstoss (Arbeits- und Ruhezeitverordnung). */
+/** US-05: ARV-Verletzung (Arbeits- und Ruhezeitverordnung). */
 export type ArvViolationSeverity = "low" | "medium" | "high";
 
-/** Status für ARV-Verstoss-Report (offen, bestätigt, unterschrieben, abgeschlossen). */
+/** Status für den ARV-Verletzungsreport (offen, bestätigt, unterschrieben, abgeschlossen). */
 export type ArvViolationStatus = "open" | "acknowledged" | "signed" | "closed";
 
-/** Kategorie des Verstosses (Pause, Ruhezeit, Arbeitszeit, Lenkzeit, …). */
+/** Kategorie der Verletzung (Pause, Ruhezeit, Arbeitszeit, Lenkzeit, …). */
 export type ArvViolationType =
   | "pause"
   | "rest"
@@ -85,7 +85,7 @@ export type ArvViolationType =
 export type ArvViolation = {
   /** Eindeutige ID für Liste/Detail (Report-Ansicht). */
   id?: string;
-  /** Tag des Verstosses (YYYY-MM-DD). */
+  /** Tag der Verletzung (YYYY-MM-DD). */
   date: string;
   /** Kurzbeschreibung (z.B. „Maximale Tagesarbeitszeit überschritten“). */
   description: string;
@@ -93,11 +93,11 @@ export type ArvViolation = {
   severity?: ArvViolationSeverity;
   /** Fahrer:in (für Report-Ansicht). */
   driverId?: string;
-  /** Verstosstyp (Pause, Ruhezeit, …). */
+  /** Verletzungstyp (Pause, Ruhezeit, …). */
   violationType?: ArvViolationType;
   /** Betroffene Regel (z.B. „ARV Art. 9 Abs. 2“). */
   rule?: string;
-  /** Zeitraum des Verstosses (z.B. 06:00–12:00). */
+  /** Zeitraum der Verletzung (z. B. 06:00–12:00). */
   timeRange?: { start: TimeString; end: TimeString };
   /** true = Auswertung auf korrigierten Daten. */
   useCorrectedData?: boolean;

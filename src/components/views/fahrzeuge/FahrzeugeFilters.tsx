@@ -40,7 +40,7 @@ export function FahrzeugeFilters({
     >
       <div className="flex min-w-[200px] flex-col gap-1.5">
         <label htmlFor="fv-search" className="text-xs font-medium text-muted-foreground">
-          Suche (Kennzeichen, ID, Nummern, VIN, Status, …)
+          Suche (Kennzeichen, ID, Nummern, VIN, …)
         </label>
         <input
           id="fv-search"

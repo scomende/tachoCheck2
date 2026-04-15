@@ -1,4 +1,4 @@
-# ARV-Verstösse: Originaldaten und Korrigierte Daten gleichzeitig sichtbar
+# ARV-Verletzungen: Originaldaten und korrigierte Daten gleichzeitig sichtbar
 
 **Ziel:** Beide Datenbasen (Original und Korrigiert) gleichzeitig anzeigen, **ohne** Segment-Control / Toggle. Kein Umschalten mehr zwischen „Originaldaten“ und „Korrigierte Daten“.
 
@@ -7,7 +7,7 @@
 ## Ausgangslage
 
 - Aktuell: Ein Toggle „Originaldaten | Korrigierte Daten“ filtert die Liste; es ist immer nur eine Datenbasis sichtbar.
-- Gewünscht: Beide gleichzeitig sehen, damit man z. B. vergleichen kann, ob ein Verstoss nach Korrektur noch besteht oder nur in einer Basis vorkommt.
+- Gewünscht: Beide gleichzeitig sehen, damit man z. B. vergleichen kann, ob eine Verletzung nach Korrektur noch besteht oder nur in einer Basis vorkommt.
 
 ---
 
@@ -15,11 +15,11 @@
 
 **Aufbau**
 
-- **Oben:** Bereich „Verstösse (Originaldaten)“ mit einer Tabelle (gleiche Spalten wie heute: Mitarbeiter:in, Datum, Verstosstyp, Schweregrad, Status).
-- **Darunter:** Bereich „Verstösse (Korrigierte Daten)“ mit einer zweiten Tabelle, gleicher Aufbau.
+- **Oben:** Bereich „Verletzungen (Originaldaten)“ mit einer Tabelle (gleiche Spalten wie heute: Mitarbeiter:in, Datum, Verletzungstyp, Schweregrad, Status).
+- **Darunter:** Bereich „Verletzungen (Korrigierte Daten)“ mit einer zweiten Tabelle, gleicher Aufbau.
 - Filterzeile (Datum, Mitarbeiter:in, Schweregrad, Status) gilt für **beide** Tabellen.
 - Das Toggle „Datenbasis“ entfällt.
-- Detail-Panel rechts: Zeigt weiterhin einen ausgewählten Verstoss; Auswahl kann in **einer** der beiden Tabellen erfolgen (evtl. im Detail erkennbar, ob Original oder Korrigiert).
+- Detail-Panel rechts: Zeigt weiterhin eine ausgewählte Verletzung; Auswahl kann in **einer** der beiden Tabellen erfolgen (evtl. im Detail erkennbar, ob Original oder Korrigiert).
 
 **Vorteile**
 
@@ -28,12 +28,12 @@
 
 **Nachteile**
 
-- Viel vertikaler Platz; bei vielen Verstössen viel Scrollen.
+- Viel vertikaler Platz; bei vielen Verletzungen viel Scrollen.
 - Kein direkter Zeilenvergleich „dieselbe Person, derselbe Tag“ zwischen den Tabellen (man muss visuell suchen).
 
 **Empfehlung**
 
-- Gut geeignet, wenn die Anzahl Verstösse pro Datenbasis überschaubar ist und man die beiden Listen klar getrennt sehen will.
+- Gut geeignet, wenn die Anzahl Verletzungen pro Datenbasis überschaubar ist und man die beiden Listen klar getrennt sehen will.
 
 ---
 
@@ -68,10 +68,10 @@
 **Aufbau**
 
 - **Eine** Tabelle mit erweiterten Spalten:
-  - Wie bisher: Mitarbeiter:in, Datum, Verstosstyp, Schweregrad, Status.
+  - Wie bisher: Mitarbeiter:in, Datum, Verletzungstyp, Schweregrad, Status.
   - Zusätzlich zwei Spalten (oder eine kombinierte): z. B. **„Original“** und **„Korrigiert“**.
-- Pro Zeile steht ein **logischer Verstoss** (z. B. definiert über Mitarbeiter + Datum + Verstosstyp). In den Zellen „Original“ und „Korrigiert“ wird angezeigt, ob dieser Verstoss in der jeweiligen Datenbasis vorkommt (z. B. Badge „Vorhanden“ / „–“ oder Schweregrad/Status pro Basis).
-- Oder: Zeilen sind **pro Verstoss und Datenbasis** doppelt (eine Zeile „Müller Anna, 20.05., … Original“, eine Zeile „Müller Anna, 20.05., … Korrigiert“) mit einer kleinen Kennzeichnungsspalte „Original“ / „Korrigiert“.
+- Pro Zeile steht eine **logische Verletzung** (z. B. definiert über Mitarbeiter + Datum + Verletzungstyp). In den Zellen „Original“ und „Korrigiert“ wird angezeigt, ob diese Verletzung in der jeweiligen Datenbasis vorkommt (z. B. Badge „Vorhanden“ / „–“ oder Schweregrad/Status pro Basis).
+- Oder: Zeilen sind **pro Verletzung und Datenbasis** doppelt (eine Zeile „Müller Anna, 20.05., … Original“, eine Zeile „Müller Anna, 20.05., … Korrigiert“) mit einer kleinen Kennzeichnungsspalte „Original“ / „Korrigiert“.
 - Das Toggle „Datenbasis“ entfällt; alle Daten kommen aus einer kombinierten Abfrage.
 
 **Vorteile**
@@ -81,12 +81,12 @@
 
 **Nachteile**
 
-- Logik und Datenmodell werden anspruchsvoller (Vereinigung/Abgleich von Verstössen über beide Basen, Definition „gleicher Verstoss“).
-- Bei vielen Verstössen kann die Tabelle unübersichtlich werden (viele Spalten oder viele Doppelzeilen).
+- Logik und Datenmodell werden anspruchsvoller (Vereinigung/Abgleich von Verletzungen über beide Basen, Definition „dieselbe Verletzung“).
+- Bei vielen Verletzungen kann die Tabelle unübersichtlich werden (viele Spalten oder viele Doppelzeilen).
 
 **Empfehlung**
 
-- Sinnvoll, wenn die Verstoss-Menge moderat ist und der Fokus auf „Existenz in Original vs. Korrigiert“ pro Ereignis liegt.
+- Sinnvoll, wenn die Verletzungsmenge moderat ist und der Fokus auf „Existenz in Original vs. Korrigiert“ pro Ereignis liegt.
 
 ---
 

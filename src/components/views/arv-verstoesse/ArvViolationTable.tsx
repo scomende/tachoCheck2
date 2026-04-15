@@ -146,7 +146,7 @@ function ariaGroupSummary(group: ArvViolationDayGroup): string {
   const sev = maxSev ? SEVERITY_LABELS[maxSev] : "–";
   const agg = aggregateViolationDayGroupStatus(group);
   const st = agg ? STATUS_LABELS[agg] : "–";
-  return `${n} Verstoss${n === 1 ? "" : "e"}, höchster Schweregrad ${sev}, angezeigter Status ${st}.`;
+  return `${n === 1 ? "1 Verletzung" : `${n} Verletzungen`}, höchster Schweregrad ${sev}, angezeigter Status ${st}.`;
 }
 
 export function ArvViolationTable({
@@ -224,7 +224,7 @@ export function ArvViolationTable({
     <div
       className={cn("flex flex-1 flex-col overflow-auto", className)}
       role="list"
-      aria-label="Liste Verstösse nach Mitarbeiter:in und Tag"
+      aria-label="Liste Verletzungen nach Mitarbeiter:in und Tag"
     >
       <table className="w-full border-collapse text-left text-sm">
         <thead className="sticky top-0 z-10 border-b border-border bg-muted/50">
@@ -236,7 +236,7 @@ export function ArvViolationTable({
             <SortHeader column="driver" label="Mitarbeiter:in" />
             <SortHeader column="date" label="Datum" />
             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Verstösse
+              Verletzungen
             </th>
             <SortHeader column="severity" label="Schweregrad" />
             <SortHeader column="status" label="Status" />
@@ -246,14 +246,14 @@ export function ArvViolationTable({
           {sortedGroups.length === 0 ? (
             <tr>
               <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted-foreground">
-                Keine Verstösse für die gewählten Filter
+                Keine Verletzungen für die gewählten Filter
               </td>
             </tr>
           ) : (
             sortedGroups.map((group) => {
               const isExpanded = group.key === selectedGroupKey;
               const n = group.violations.length;
-              const countLabel = n === 1 ? "1 Verstoss" : `${n} Verstösse`;
+              const countLabel = n === 1 ? "1 Verletzung" : `${n} Verletzungen`;
               const rowLabel = `${getDriverNameById(group.driverId)}, ${formatDayLabelLong(group.date)}. ${ariaGroupSummary(group)}`;
               const nameHighlight = driverHighlightedByGlobalToolbar(
                 group.driverId,

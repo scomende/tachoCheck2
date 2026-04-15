@@ -3,11 +3,7 @@
 import { Fragment } from "react";
 import { Check, X, Lock, Pencil, ChevronRight, ChevronDown } from "lucide-react";
 import type { Vehicle } from "@/domain/vehicleTypes";
-import {
-  formatValidityRange,
-  formatAssignedEmployee,
-  vehicleStatusBadgeClass,
-} from "@/lib/vehicleUi";
+import { formatValidityRange, formatAssignedEmployee } from "@/lib/vehicleUi";
 import { cn } from "@/lib/utils";
 import { FahrzeugRowDetailContent } from "./FahrzeugRowDetailContent";
 import { VehicleSymbolIcon, VEHICLE_SYMBOL_LABELS } from "./VehicleSymbolIcon";
@@ -16,7 +12,7 @@ const SELECTED_ROW_BG = "bg-[#FFF8E6]";
 const SELECTED_ROW_BG_HOVER = "hover:bg-[#FFF2CC]";
 const EXPANDED_NEUTRAL_ROW = "hover:bg-muted/25";
 
-const COL_COUNT = 11;
+const COL_COUNT = 9;
 
 type FahrzeugTableProps = {
   vehicles: Vehicle[];
@@ -56,9 +52,6 @@ export function FahrzeugTable({
             <th className="min-w-[6.5rem] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Kennzeichen
             </th>
-            <th className="min-w-[7rem] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Status
-            </th>
             <th className="min-w-[10rem] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Art · Typ
             </th>
@@ -93,7 +86,7 @@ export function FahrzeugTable({
               const artTyp = [v.vehicleCategory, v.vehicleModel].filter(Boolean).join(" · ") || "–";
               const { display: empDisplay, title: empTitle } = formatAssignedEmployee(v.assignedEmployee);
               const symbolLabel = VEHICLE_SYMBOL_LABELS[v.symbolType];
-              const rowSummary = `${symbolLabel}, ${v.licensePlate}, ${v.status}, ${artTyp}`;
+              const rowSummary = `${symbolLabel}, ${v.licensePlate}, ${artTyp}`;
               return (
                 <Fragment key={v.id}>
                   <tr
@@ -141,17 +134,6 @@ export function FahrzeugTable({
                       </div>
                     </td>
                     <td className="px-3 py-3 font-medium text-foreground">{v.licensePlate}</td>
-                    <td className="px-3 py-3">
-                      <span
-                        className={cn(
-                          "inline-flex max-w-full truncate rounded-full px-2 py-0.5 text-xs font-medium",
-                          vehicleStatusBadgeClass(v.status)
-                        )}
-                        title={v.status}
-                      >
-                        {v.status}
-                      </span>
-                    </td>
                     <td className="px-3 py-3 text-foreground">
                       <span className="line-clamp-2" title={artTyp}>
                         {artTyp}

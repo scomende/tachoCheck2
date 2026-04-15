@@ -31,7 +31,7 @@ export function ArvFilters({
         className
       )}
       role="search"
-      aria-label="Filter Verstösse"
+      aria-label="Filter Verletzungen"
     >
       <div className="flex flex-col gap-1.5">
         <label htmlFor="arv-date-from" className="text-xs font-medium text-muted-foreground">

@@ -15,7 +15,7 @@ type ArvViolationsPanelProps = {
   violations: ArvViolation[];
   highlightedDate: string | null;
   onSelectDate: (date: string) => void;
-  /** Aktueller Fahrer (für Link „Details“ → Verstösse-Tab). */
+  /** Aktueller Fahrer (für Link „Details“ → Tab Verletzungen). */
   driverId?: string;
   className?: string;
 };
@@ -46,15 +46,15 @@ export const ArvViolationsPanel = ({
         className
       )}
       role="complementary"
-      aria-label="Verstösse dieser Woche"
+      aria-label="Verletzungen dieser Woche"
     >
       <h2 className="border-b border-border px-4 py-3 text-sm font-semibold text-foreground">
-        Verstösse dieser Woche
+        Verletzungen dieser Woche
       </h2>
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
         {violations.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            Keine Verstösse in dieser Woche
+            Keine Verletzungen in dieser Woche
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -83,7 +83,7 @@ export const ArvViolationsPanel = ({
                         "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 rounded"
                       )}
                       aria-pressed={isHighlighted}
-                      aria-label={`Verstoss ${formatDayLabelLong(v.date)}: ${v.description}. Tag hervorheben.`}
+                      aria-label={`Verletzung ${formatDayLabelLong(v.date)}: ${v.description}. Tag hervorheben.`}
                     >
                       <span className="font-medium text-foreground">
                         {formatDayLabelLong(v.date)}
@@ -101,7 +101,7 @@ export const ArvViolationsPanel = ({
                     <Link
                       href={detailsHref}
                       className="mt-1.5 self-start text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 rounded"
-                      aria-label={`Details zu Verstoss ${formatDayLabelLong(v.date)} anzeigen`}
+                      aria-label={`Details zur Verletzung ${formatDayLabelLong(v.date)} anzeigen`}
                     >
                       Details
                     </Link>

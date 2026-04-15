@@ -1,5 +1,5 @@
 /**
- * Labels und Optionen für ARV-Verstoss-Report (Schweregrad, Status, Verstosstyp).
+ * Labels und Optionen für den ARV-Verletzungsreport (Schweregrad, Status, Verletzungstyp).
  */
 import type {
   ArvViolationSeverity,
@@ -39,7 +39,7 @@ export const VIOLATION_TYPE_LABELS: Record<ArvViolationType, string> = {
   other: "Sonstiges",
 };
 
-/** Hintergrundfarbe für den Verstosstyp-Tag (kleiner farbiger Punkt/Badge). */
+/** Hintergrundfarbe für den Verletzungstyp-Tag (kleiner farbiger Punkt/Badge). */
 export const VIOLATION_TYPE_COLORS: Record<ArvViolationType, string> = {
   driving: "bg-red-500",      // Lenkzeit = Rot
   work: "bg-blue-500",       // Arbeitszeit = Blau
@@ -62,6 +62,6 @@ export const STATUS_OPTIONS: { value: ArvViolationStatus; label: string }[] = [
   { value: "closed", label: STATUS_LABELS.closed },
 ];
 
-/** Hervorhebung Mitarbeitername bei globaler Toolbar-Suche oder -Auswahl (Tab Verstösse). */
+/** Hervorhebung Mitarbeitername bei globaler Toolbar-Suche oder -Auswahl (Tab Verletzungen). */
 export const GLOBAL_TOOLBAR_DRIVER_NAME_HIGHLIGHT_CLASS =
   "rounded px-1.5 py-0.5 font-semibold bg-amber-200/95 text-foreground shadow-sm not-italic dark:bg-amber-500/35 dark:text-amber-50";

@@ -51,7 +51,7 @@ export const SEGMENT_COLORS: Record<SegmentType, string> = {
   other: "bg-green-400",       // Ruhezeit = Grün
 };
 
-/** Mattere Segmentfarben für Wochenansicht (bessere Lesbarkeit, Verstösse heben sich ab). */
+/** Mattere Segmentfarben für Wochenansicht (bessere Lesbarkeit, Verletzungen heben sich ab). */
 export const SEGMENT_COLORS_MUTED: Record<SegmentType, string> = {
   driving: "bg-red-300/70",
   work: "bg-blue-300/70",
