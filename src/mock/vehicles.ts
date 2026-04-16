@@ -251,7 +251,7 @@ export function createVehicle(input: CreateVehicleInput): Vehicle {
     validFrom: today,
     validUntil: "",
     source: "manual",
-    editable: true,
+    editable: !input.isCoopVehicle,
     isCoopVehicle: input.isCoopVehicle,
     qualifications: [],
   };
@@ -294,10 +294,29 @@ export function updateVehicle(id: string, input: UpdateVehicleInput): Vehicle | 
 }
 
 export type VehicleDetailFieldsPatch = Partial<
-  Pick<Vehicle, "assignedEmployee" | "validFrom" | "validUntil">
+  Pick<
+    Vehicle,
+    | "assignedEmployee"
+    | "validFrom"
+    | "validUntil"
+    | "licensePlate"
+    | "vehicleCategory"
+    | "vehicleModel"
+    | "wspVehicleId"
+    | "vehicleGroup"
+    | "vin"
+    | "internalNumber"
+    | "masterNumber"
+    | "vehicleNumber"
+    | "mandant"
+    | "costCenter"
+    | "status"
+    | "symbolType"
+    | "displayName"
+  >
 >;
 
-/** Mitarbeiter:in und Gültigkeit – für alle Fahrzeuge (auch Import), unabhängig von `editable`. */
+/** Stammdaten aus dem Detail-Formular (nur Fremdfahrzeuge: `isCoopVehicle === false`). */
 export function updateVehicleDetailFields(
   id: string,
   patch: VehicleDetailFieldsPatch
@@ -305,15 +324,34 @@ export function updateVehicleDetailFields(
   const index = vehiclesList.findIndex((v) => v.id === id);
   if (index === -1) return null;
   const current = vehiclesList[index];
-  const next = { ...current };
-  if (patch.assignedEmployee !== undefined) {
-    next.assignedEmployee = patch.assignedEmployee.trim();
-  }
-  if (patch.validFrom !== undefined) {
-    next.validFrom = patch.validFrom.trim();
-  }
-  if (patch.validUntil !== undefined) {
-    next.validUntil = patch.validUntil.trim();
+  if (current.isCoopVehicle) return null;
+  const next: Vehicle = { ...current };
+  if (patch.assignedEmployee !== undefined) next.assignedEmployee = patch.assignedEmployee.trim();
+  if (patch.validFrom !== undefined) next.validFrom = patch.validFrom.trim();
+  if (patch.validUntil !== undefined) next.validUntil = patch.validUntil.trim();
+  if (patch.licensePlate !== undefined) next.licensePlate = patch.licensePlate.trim();
+  if (patch.vehicleCategory !== undefined) next.vehicleCategory = patch.vehicleCategory.trim();
+  if (patch.vehicleModel !== undefined) next.vehicleModel = patch.vehicleModel.trim();
+  if (patch.wspVehicleId !== undefined) next.wspVehicleId = patch.wspVehicleId.trim();
+  if (patch.vehicleGroup !== undefined) next.vehicleGroup = patch.vehicleGroup.trim();
+  if (patch.vin !== undefined) next.vin = patch.vin.trim();
+  if (patch.internalNumber !== undefined) next.internalNumber = patch.internalNumber.trim();
+  if (patch.masterNumber !== undefined) next.masterNumber = patch.masterNumber.trim();
+  if (patch.vehicleNumber !== undefined) next.vehicleNumber = patch.vehicleNumber.trim();
+  if (patch.mandant !== undefined) next.mandant = patch.mandant.trim();
+  if (patch.costCenter !== undefined) next.costCenter = patch.costCenter.trim();
+  if (patch.status !== undefined) next.status = patch.status.trim();
+  if (patch.symbolType !== undefined) next.symbolType = patch.symbolType;
+  if (patch.displayName !== undefined && patch.displayName.trim() !== "") {
+    next.displayName = patch.displayName.trim();
+  } else if (
+    patch.vehicleCategory !== undefined ||
+    patch.vehicleModel !== undefined ||
+    patch.licensePlate !== undefined
+  ) {
+    const cat = next.vehicleCategory.trim();
+    const mod = next.vehicleModel.trim();
+    next.displayName = `${cat} ${mod}`.trim() || next.licensePlate.trim() || next.displayName;
   }
   vehiclesList[index] = next;
   return next;

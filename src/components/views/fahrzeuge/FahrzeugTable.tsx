@@ -3,16 +3,15 @@
 import { Fragment } from "react";
 import { Check, X, Lock, Pencil, ChevronRight, ChevronDown } from "lucide-react";
 import type { Vehicle } from "@/domain/vehicleTypes";
-import { formatValidityRange, formatAssignedEmployee } from "@/lib/vehicleUi";
+import { formatValidityRange } from "@/lib/vehicleUi";
 import { cn } from "@/lib/utils";
 import { FahrzeugRowDetailContent } from "./FahrzeugRowDetailContent";
-import { VehicleSymbolIcon, VEHICLE_SYMBOL_LABELS } from "./VehicleSymbolIcon";
 
 const SELECTED_ROW_BG = "bg-[#FFF8E6]";
 const SELECTED_ROW_BG_HOVER = "hover:bg-[#FFF2CC]";
 const EXPANDED_NEUTRAL_ROW = "hover:bg-muted/25";
 
-const COL_COUNT = 9;
+const COL_COUNT = 7;
 
 type FahrzeugTableProps = {
   vehicles: Vehicle[];
@@ -46,9 +45,6 @@ export function FahrzeugTable({
               className="w-10 px-2 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
               aria-hidden
             />
-            <th className="w-[4.25rem] px-1 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Symbol
-            </th>
             <th className="min-w-[6.5rem] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Kennzeichen
             </th>
@@ -60,9 +56,6 @@ export function FahrzeugTable({
             </th>
             <th className="min-w-[9rem] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Gültigkeit
-            </th>
-            <th className="min-w-[8rem] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Mitarbeiter:in
             </th>
             <th className="min-w-[5rem] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Coop
@@ -84,16 +77,17 @@ export function FahrzeugTable({
               const isExpanded = expandAllDetails || expandedId === v.id;
               const isYellow = highlightedId === v.id;
               const artTyp = [v.vehicleCategory, v.vehicleModel].filter(Boolean).join(" · ") || "–";
-              const { display: empDisplay, title: empTitle } = formatAssignedEmployee(v.assignedEmployee);
-              const symbolLabel = VEHICLE_SYMBOL_LABELS[v.symbolType];
-              const rowSummary = `${symbolLabel}, ${v.licensePlate}, ${artTyp}`;
+              const emp = v.assignedEmployee.trim();
+              const rowSummary = [v.licensePlate, artTyp, emp ? `Mitarbeiter:in ${emp}` : null]
+                .filter(Boolean)
+                .join(", ");
               return (
                 <Fragment key={v.id}>
                   <tr
                     className={cn(
                       "border-b border-border transition-colors min-h-[2.75rem]",
                       "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
-                      !v.editable && !isExpanded && "bg-muted/10",
+                      v.isCoopVehicle && !isExpanded && "bg-muted/10",
                       isYellow
                         ? cn(SELECTED_ROW_BG, SELECTED_ROW_BG_HOVER)
                         : isExpanded
@@ -128,11 +122,6 @@ export function FahrzeugTable({
                         <ChevronRight className="mx-auto size-4 shrink-0 opacity-70" />
                       )}
                     </td>
-                    <td className="px-1 py-2 align-middle" title={symbolLabel}>
-                      <div className="flex justify-center">
-                        <VehicleSymbolIcon type={v.symbolType} className="text-foreground" />
-                      </div>
-                    </td>
                     <td className="px-3 py-3 font-medium text-foreground">{v.licensePlate}</td>
                     <td className="px-3 py-3 text-foreground">
                       <span className="line-clamp-2" title={artTyp}>
@@ -142,9 +131,6 @@ export function FahrzeugTable({
                     <td className="px-3 py-3 font-mono text-xs text-foreground">{v.wspVehicleId}</td>
                     <td className="px-3 py-3 tabular-nums text-foreground text-xs leading-snug">
                       {formatValidityRange(v.validFrom, v.validUntil)}
-                    </td>
-                    <td className="px-3 py-3 text-foreground" title={empTitle || undefined}>
-                      {empDisplay}
                     </td>
                     <td className="px-3 py-3">
                       {v.isCoopVehicle ? (
@@ -160,10 +146,10 @@ export function FahrzeugTable({
                       )}
                     </td>
                     <td className="px-2 py-3 text-center text-muted-foreground">
-                      {v.editable ? (
-                        <Pencil className="mx-auto size-4" aria-label="Manuell, bearbeitbar" />
+                      {!v.isCoopVehicle ? (
+                        <Pencil className="mx-auto size-4" aria-label="Fremdfahrzeug, im Detail editierbar" />
                       ) : (
-                        <Lock className="mx-auto size-4" aria-label="Import, nicht bearbeitbar" />
+                        <Lock className="mx-auto size-4" aria-label="Coop-Fahrzeug, nicht editierbar" />
                       )}
                     </td>
                   </tr>

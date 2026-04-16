@@ -65,8 +65,9 @@ export type Vehicle = {
   /** Gültig bis (YYYY-MM-DD); leer = unbefristet. */
   validUntil: string;
   source: VehicleSource;
+  /** Eigenes Coop-Fuhrparkfahrzeug (true) vs. Fremdfahrzeug (false). Detailbearbeitung nur bei Fremdfahrzeugen. */
   isCoopVehicle: boolean;
-  /** Aus Schnittstelle: nicht bearbeitbar; manuell: bearbeitbar */
+  /** Herkunft: Import vs. manuell (Filter/Mock); Detail-Edit folgt `!isCoopVehicle`. */
   editable: boolean;
   qualifications?: VehicleQualification[];
 };
