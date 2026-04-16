@@ -80,7 +80,8 @@ export function CreateVehicleModal({
         <CardContent className="p-4">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <p className="text-xs text-muted-foreground">
-              Quelle wird automatisch auf „Manuell“ gesetzt. Eine WSP-Fahrzeug-ID wird vergeben.
+              Quelle wird automatisch auf „Manuell“ gesetzt. Eine WSP-Fahrzeug-ID wird vergeben. Das Fahrzeug
+              wird als Fremdfahrzeug erfasst und kann anschließend im Detail bearbeitet werden.
             </p>
             <div>
               <label htmlFor="cv-license" className="text-xs font-medium text-muted-foreground">
@@ -148,29 +149,6 @@ export function CreateVehicleModal({
                 placeholder="Höchstens eine Person"
                 className="mt-0.5 w-full rounded border border-border bg-background px-2 py-1.5 text-sm"
               />
-            </div>
-            <div>
-              <span className="text-xs font-medium text-muted-foreground">Coop-Fahrzeug</span>
-              <div className="mt-1 flex gap-4">
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="coop-create"
-                    checked={form.isCoopVehicle}
-                    onChange={() => setForm({ ...form, isCoopVehicle: true })}
-                  />
-                  Ja
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="coop-create"
-                    checked={!form.isCoopVehicle}
-                    onChange={() => setForm({ ...form, isCoopVehicle: false })}
-                  />
-                  Nein
-                </label>
-              </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={handleClose}>
